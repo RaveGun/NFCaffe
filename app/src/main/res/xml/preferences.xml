@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:title="WiFi SSID"
+        android:summary="Select the NFC's Reader SSID"
+        android:key="wifiNFCSSID"
+        android:defaultValue="NFCoffee" />
+
+    <EditTextPreference
+        android:defaultValue="freecoffee"
+        android:key="wifiNFCPWD"
+        android:password="true"
+        android:singleLine="true"
+        android:summary="Enter the password for SSID"
+        android:title="Password" />
+
+</PreferenceScreen>
