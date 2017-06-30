@@ -71,10 +71,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         // Code here will be triggered once the drawer closes as we don't want anything to happen so we leave this blank
         mActionBarDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -102,11 +101,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         // connect to wifi
 
                         // start transfer task
-
+/*
                         if (mTcpClient == null) {
                             new ConnectTask().execute("");
                         }
-
+*/
                         // process received data on success
 
                         break;

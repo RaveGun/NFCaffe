@@ -22,11 +22,9 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
                 <!-- Registering app for receiving NFC's TAG_DISCOVERED intent -->
                 <action android:name="android.nfc.action.TAG_DISCOVERED" />
-
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
