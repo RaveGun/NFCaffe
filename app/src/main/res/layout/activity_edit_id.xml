@@ -4,13 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="ro.dsgmedia.cox.nfcoffee.EditID"
-    android:orientation="vertical">
+    android:layout_margin="16dp"
+    android:orientation="vertical"
+    tools:context="ro.dsgmedia.cox.nfcoffee.EditID">
 
     <TextView
         android:id="@+id/editID_tvCardID"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:labelFor="@+id/editID_etCardID"
         android:text="@string/card_id" />
 
     <EditText
@@ -20,13 +22,13 @@
         android:ems="10"
         android:enabled="false"
         android:inputType="textPersonName"
-        android:singleLine="true"
-        android:text="There shall be here something" />
+        android:maxLines="1" />
 
     <TextView
         android:id="@+id/editID_tvCodeName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:labelFor="@+id/editID_etCodeName"
         android:text="@string/code_name" />
 
     <EditText
@@ -36,12 +38,13 @@
         android:ems="10"
         android:enabled="false"
         android:inputType="textPersonName"
-        android:singleLine="true" />
+        android:maxLines="1" />
 
     <TextView
         android:id="@+id/editID_tvName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:labelFor="@+id/editID_etName"
         android:text="@string/name" />
 
     <EditText
@@ -51,12 +54,13 @@
         android:ems="10"
         android:inputType="textPersonName"
         android:selectAllOnFocus="true"
-        android:singleLine="true" />
+        android:maxLines="1" />
 
     <TextView
         android:id="@+id/editID_tvEmail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:labelFor="@+id/editID_etEmail"
         android:text="@string/email" />
 
     <EditText
@@ -64,9 +68,25 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:inputType=""
-        android:selectAllOnFocus="true"
-        android:singleLine="true" />
+        android:inputType="textEmailAddress"
+        android:maxLines="1"
+        android:selectAllOnFocus="true" />
+
+    <TextView
+        android:id="@+id/editID_tvCoffees"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/editID_etCoffees"
+        android:text="@string/number_of_coffees" />
+
+    <EditText
+        android:id="@+id/editID_etCoffees"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:enabled="false"
+        android:inputType="textPersonName"
+        android:maxLines="1" />
 
     <Space
         android:layout_width="match_parent"

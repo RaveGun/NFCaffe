@@ -1,6 +1,5 @@
 package ro.dsgmedia.cox.nfcoffee;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
@@ -13,7 +12,7 @@ import android.widget.TextView;
 import java.math.BigInteger;
 
 public class EditID extends AppCompatActivity {
-    TextView etCardID, etCodeName, etName, etEMAil;
+    TextView etCardID, etCodeName, etName, etEMAil, etCoffees;
 
     Button bSaveData;
     Button bCancel;
@@ -29,6 +28,7 @@ public class EditID extends AppCompatActivity {
         etCodeName = (TextView) findViewById(R.id.editID_etCodeName);
         etName = (TextView) findViewById(R.id.editID_etName);
         etEMAil = (TextView) findViewById(R.id.editID_etEmail);
+        etCoffees = (TextView) findViewById(R.id.editID_etCoffees);
 
         bSaveData = (Button) findViewById(R.id.editID_bSave);
         bCancel = (Button) findViewById(R.id.editID_bCancel);
@@ -37,19 +37,21 @@ public class EditID extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 SQLiteDatabase mydatabase = openOrCreateDatabase("NFCoffee",MODE_PRIVATE, null);
-                mydatabase.execSQL("CREATE TABLE IF NOT EXISTS NFCIDTable(NFCID TEXT NOT NULL PRIMARY KEY, CODENAME TEXT NOT NULL, UNAME TEXT, EMAIL TEXT);");
+                mydatabase.execSQL("CREATE TABLE IF NOT EXISTS NFCIDTable(NFCID TEXT NOT NULL PRIMARY KEY, CODENAME TEXT NOT NULL, UNAME TEXT, EMAIL TEXT, COFF INT);");
 
                 Log.i("SQLQuery:", "INSERT OR REPLACE INTO NFCIDTable VALUES (\""+
                         etCardID.getText() + "\",\"" +
                         etCodeName.getText() + "\",\"" +
                         etName.getText() + "\",\"" +
-                        etEMAil.getText() + "\");");
+                        etEMAil.getText() + "\",\"" +
+                        etCoffees.getText() + "\");");
 
                 mydatabase.execSQL("INSERT OR REPLACE INTO NFCIDTable VALUES (\""+
                         etCardID.getText() + "\",\"" +
                         etCodeName.getText() + "\",\"" +
                         etName.getText() + "\",\"" +
-                        etEMAil.getText() + "\");");
+                        etEMAil.getText() + "\",\"" +
+                        etCoffees.getText() + "\");");
 
                 mydatabase.close();
                 finish();
@@ -94,11 +96,12 @@ public class EditID extends AppCompatActivity {
                     rawQuerry.moveToFirst();
                     String UserName = rawQuerry.getString(2);
                     String Email = rawQuerry.getString(3);
-                    SetNFCIDTextField(ByteArrayToHexString(NFCIDValue), localCodeName, UserName, Email);
+                    String Coffees = String.valueOf(rawQuerry.getInt(4));
+                    SetNFCIDTextField(ByteArrayToHexString(NFCIDValue), localCodeName, UserName, Email, Coffees);
                 }
                 else
                 {
-                    SetNFCIDTextField(ByteArrayToHexString(NFCIDValue), localCodeName, "", "");
+                    SetNFCIDTextField(ByteArrayToHexString(NFCIDValue), localCodeName, "", "", "0");
                 }
                 rawQuerry.close();
                 mydatabase.close();
@@ -117,7 +120,8 @@ public class EditID extends AppCompatActivity {
                         String NFCID = rawQuerry.getString(0);
                         String UserName = rawQuerry.getString(2);
                         String Email = rawQuerry.getString(3);
-                        SetNFCIDTextField(NFCID, NFCIDString, UserName, Email);
+                        String Coffees = String.valueOf(rawQuerry.getInt(4));
+                        SetNFCIDTextField(NFCID, NFCIDString, UserName, Email, Coffees);
                     }
                     rawQuerry.close();
                     mydatabase.close();
@@ -132,11 +136,12 @@ public class EditID extends AppCompatActivity {
     }
 
 
-    private void SetNFCIDTextField(String valueID, String valueCodeName, String valueName, String valueEmail) {
+    private void SetNFCIDTextField(String valueID, String valueCodeName, String valueName, String valueEmail, String coffees) {
         etCardID.setText(valueID);
         etCodeName.setText(valueCodeName);
         etName.setText(valueName);
         etEMAil.setText(valueEmail);
+        etCoffees.setText(coffees);
         //etCardID.setVisibility(View.VISIBLE);
     }
 

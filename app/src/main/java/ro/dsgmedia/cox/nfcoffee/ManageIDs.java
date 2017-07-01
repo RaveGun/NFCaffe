@@ -4,17 +4,22 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import com.github.clans.fab.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
+
+import com.github.clans.fab.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -23,16 +28,17 @@ import java.util.Map;
 public class ManageIDs extends AppCompatActivity {
 
     private ListView mList;
-//    private ArrayList<String> arrayList;
-//    private ClientListAdapter mAdapter;
+    private MenuItem mDeleteID;
+    private HashMap<String, String> nameNFCID = new HashMap<>();;
+    private int toDeleteItemPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manage_ids);
 
-/*        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);*/
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.NFCReadNewID);
@@ -45,16 +51,82 @@ public class ManageIDs extends AppCompatActivity {
         });
 
         mList = (ListView) findViewById(R.id.listOfIDs);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateListView();
+
+        mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                mDeleteID.setVisible(false);
+                mList.setItemChecked(mList.getSelectedItemPosition(), false);
+                toDeleteItemPosition = -1;
+
+                ArrayList<String> selectedID = new ArrayList<String>(nameNFCID.values());
+                Log.i("Name:", selectedID.get(position));
+
+                Intent EditIDIntent = new Intent(ManageIDs.this, EditID.class);
+                EditIDIntent.putExtra("CODE_NAME", selectedID.get(position));
+                startActivity(EditIDIntent);
+            }
+        });
+
+        mList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                mDeleteID.setVisible(true);
+                mList.setItemChecked(position, true);
+                mList.setSelection(position);
+                toDeleteItemPosition = position;
+                return true;
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.manage_ids, menu);
+        mDeleteID = menu.findItem(R.id.manageids_delete);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.manageids_delete:
+                //menuItem = item;
+                //menuItem.setActionView(R.layout.progressbar);
+                //menuItem.expandActionView();
+                //TestTask task = new TestTask();
+                //task.execute("test");
+                if(-1 != toDeleteItemPosition) {
+                    Toast.makeText(ManageIDs.this, "Deleting " + ((Map.Entry)((java.util.HashMap)mList.getItemAtPosition(toDeleteItemPosition)).entrySet().toArray()[1]).getValue().toString(), Toast.LENGTH_SHORT).show();
+                    mDeleteID.setVisible(false);
+                    toDeleteItemPosition = -1;
+                    updateListView();
+                }
+                break;
+
+            default:
+                break;
+        }
+        return true;
+    }
 
 
+    private void updateListView() {
 
-        final HashMap<String, String> nameNFCID = new HashMap<>();
+        nameNFCID.clear();
 
         // Get the know IDs from the database and put them in the HashMap
         SQLiteDatabase mydatabase = openOrCreateDatabase("NFCoffee",MODE_PRIVATE, null);
-        mydatabase.execSQL("CREATE TABLE IF NOT EXISTS NFCIDTable(NFCID TEXT NOT NULL PRIMARY KEY, CODENAME TEXT NOT NULL, UNAME TEXT, EMAIL TEXT);");
+        mydatabase.execSQL("CREATE TABLE IF NOT EXISTS NFCIDTable(NFCID TEXT NOT NULL PRIMARY KEY, CODENAME TEXT NOT NULL, UNAME TEXT, EMAIL TEXT, COFF INT);");
 
-        Cursor rawQuerry = mydatabase.rawQuery("select * from NFCIDTable order by UNAME", null);
+        Cursor rawQuerry = mydatabase.rawQuery("select * from NFCIDTable order by UNAME asc;", null);
         rawQuerry.moveToFirst();
         for(int i = 0; i < rawQuerry.getCount(); i++)
         {
@@ -62,7 +134,15 @@ public class ManageIDs extends AppCompatActivity {
             String CodeNameString = rawQuerry.getString(1);
             String UserName = rawQuerry.getString(2);
             String Email = rawQuerry.getString(3);
-            nameNFCID.put(UserName, CodeNameString);
+            String Coffees = "0";
+            if(rawQuerry.getColumnCount() > 4) {
+                Coffees = String.valueOf(rawQuerry.getInt(4));
+            } else {
+                Coffees = "NA";
+            }
+
+            nameNFCID.put(UserName + "    - "+Coffees, CodeNameString);
+            Log.i("Found: ", UserName);
             rawQuerry.moveToNext();
         }
         rawQuerry.close();
@@ -81,23 +161,6 @@ public class ManageIDs extends AppCompatActivity {
             listHItems.add(resultsMap);
         }
         mList.setAdapter(adapter);
-
-
-        mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                ArrayList<String> selectedID = new ArrayList<String>(nameNFCID.values());
-                Log.i("Name:", selectedID.get(position));
-
-                Intent EditIDIntent = new Intent(ManageIDs.this, EditID.class);
-                EditIDIntent.putExtra("CODE_NAME", selectedID.get(position));
-                startActivity(EditIDIntent);
-            }
-        });
-
-/*      // notify the adapter that the data set has changed. This means that new message received
-        // from server was added to the list
-        mAdapter.notifyDataSetChanged();
-*/
     }
+
 }

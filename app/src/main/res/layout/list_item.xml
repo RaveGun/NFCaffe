@@ -3,16 +3,9 @@
     android:id="@+id/list_item"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background="@drawable/state_selector"
     android:gravity="center_vertical"
     android:orientation="vertical">
-
-    <TextView
-        android:id="@+id/list_item_text_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="4dp"
-        android:textSize="16sp"
-        android:textStyle="bold"/>
 
     <TextView
         android:id="@+id/list_item_subtext_view"
@@ -21,5 +14,14 @@
         android:layout_weight="1"
         android:padding="4dp"
         android:textSize="10sp" />
+
+    <TextView
+        android:id="@+id/list_item_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:padding="4dp"
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
 </LinearLayout>
