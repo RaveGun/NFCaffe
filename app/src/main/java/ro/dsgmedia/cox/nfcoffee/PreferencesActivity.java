@@ -70,10 +70,10 @@ public class PreferencesActivity extends PreferenceActivity {
 
         // Check for WiFi permission. If not allowed the activity will show a toast.
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            startScanning();
-        } else {
             Toast.makeText(this, "Permission to access the location is not granted.\nPlease restart " +
                     "the application and grant access to the location services.", Toast.LENGTH_SHORT).show();
+        } else {
+            startScanning();
         }
     }
 
