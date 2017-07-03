@@ -27,7 +27,6 @@ import java.util.List;
 public class PreferencesActivity extends PreferenceActivity {
 
     /* WiFi and Preferences */
-    private int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 0x3141;
     private WifiManager mainWifiObj;
     private ArrayList<String> wifis;
     BroadcastReceiver BcastRx;
@@ -69,12 +68,12 @@ public class PreferencesActivity extends PreferenceActivity {
             }
         }, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION);
-            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-        }else {
-            //do something, permission was previously granted; or legacy device
+        // Check for WiFi permission. If not allowed the activity will show a toast.
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             startScanning();
+        } else {
+            Toast.makeText(this, "Permission to access the location is not granted.\nPlease restart " +
+                    "the application and grant access to the location services.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -109,17 +108,6 @@ public class PreferencesActivity extends PreferenceActivity {
 
         super.onStop();
     }
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            // Do something with granted permission
-            startScanning();
-        }
-    }
-
 
     private void startScanning() {
         mainWifiObj.startScan();

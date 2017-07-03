@@ -141,7 +141,7 @@ public class ManageIDs extends AppCompatActivity {
                 Coffees = "NA";
             }
 
-            nameNFCID.put(UserName + "    - "+Coffees, CodeNameString);
+            nameNFCID.put(UserName + " [" + Coffees + "]", CodeNameString);
             Log.i("Found: ", UserName);
             rawQuerry.moveToNext();
         }

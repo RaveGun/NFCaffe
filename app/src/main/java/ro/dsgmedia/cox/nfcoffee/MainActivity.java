@@ -4,9 +4,11 @@ package ro.dsgmedia.cox.nfcoffee;
  * Created by COX on 24-May-17.
  */
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.nfc.tech.IsoDep;
 import android.nfc.tech.MifareClassic;
 import android.nfc.tech.MifareUltralight;
@@ -16,6 +18,7 @@ import android.nfc.tech.NfcB;
 import android.nfc.tech.NfcF;
 import android.nfc.tech.NfcV;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
@@ -58,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private NavigationView mOptionsView;
     private getTCPData mTcpClient;
+    private int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 0x3141;
 
  /*    private void setNavigationViewListner() {
         NavigationView navigationView = (NavigationView) findViewById(R.id.navigation_item_settings);
@@ -68,6 +72,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION);
+            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+        }
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
@@ -158,6 +167,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //close navigation drawer
         mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // granted permission for WiFi
+            // all good
+        }
     }
 
     public class ConnectTask extends AsyncTask<String, String, getTCPData> {
