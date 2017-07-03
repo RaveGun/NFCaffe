@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public class ManageIDs extends AppCompatActivity {
 
     private ListView mList;
     private MenuItem mDeleteID;
-    private HashMap<String, String> nameNFCID = new HashMap<>();;
+    private LinkedHashMap<String, String> nameNFCID = new LinkedHashMap<>();;
     private int toDeleteItemPosition;
 
     @Override
