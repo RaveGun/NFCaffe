@@ -4,6 +4,10 @@ package ro.dsgmedia.cox.nfcoffee;
  * Created by COX on 31-May-17.
  */
 
+import android.app.Activity;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 import java.io.*;
 import java.net.InetAddress;
@@ -12,7 +16,7 @@ import java.util.Calendar;
 
 
 public class getTCPData {
-    public static final String SERVER_IP = "192.168.4.1"; //your computer IP address
+    public static final String SERVER_IP = "192.168.4.1";
     public static final int SERVER_PORT = 31415;
     // message to send to the server
     private String mServerMessage;
@@ -77,7 +81,7 @@ public class getTCPData {
             //here you must put your computer's IP address.
             InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
 
-            Log.e("TCP Client", "C: Connecting...");
+            Log.e("TCP Client", "C: Connecting to ... " + serverAddr);
 
             //create a socket to make the connection with the server
             Socket socket = new Socket(serverAddr, SERVER_PORT);

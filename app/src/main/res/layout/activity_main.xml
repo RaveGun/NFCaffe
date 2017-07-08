@@ -35,19 +35,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <EditText
-                    android:id="@+id/mCurrentStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
-                    android:layout_weight="1"
-                    android:background="@android:color/transparent"
-                    android:ems="10"
-                    android:enabled="false"
-                    android:inputType="textPersonName"
-                    android:text="Not connected"
-                    android:textAlignment="center" />
-
                 <ImageButton
                     android:id="@+id/getTcpData"
                     android:layout_width="match_parent"
@@ -56,7 +43,21 @@
                     android:backgroundTint="@android:color/transparent"
                     android:padding="0dp"
                     android:theme="@style/AppTheme"
-                    app:srcCompat="@drawable/coffeecup" />
+                    app:srcCompat="@drawable/button_tcp_transfer" />
+
+                <EditText
+                    android:id="@+id/mCurrentStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:layout_weight="0.47"
+                    android:lines="8"
+                    android:background="@android:color/transparent"
+                    android:ems="10"
+                    android:enabled="false"
+                    android:inputType="textMultiLine"
+                    android:text="Not connected\nTest"
+                    android:textAlignment="center" />
 
             </LinearLayout>
 
