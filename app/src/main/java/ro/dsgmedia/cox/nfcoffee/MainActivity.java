@@ -30,6 +30,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.method.ScrollingMovementMethod;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -58,6 +59,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -69,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private getTCPData mTcpClient = null;
     private int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 0x3141;
     private WifiManager mainWifiObj;
+
+    private HashMap<String,String> ReceivedData = new HashMap<String, String>();
 
  /*    private void setNavigationViewListner() {
         NavigationView navigationView = (NavigationView) findViewById(R.id.navigation_item_settings);
@@ -102,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mActionBarDrawerToggle.syncState();
 
         mCurrentStatus = (TextView) findViewById(R.id.mCurrentStatus);
+        mCurrentStatus.setMovementMethod(new ScrollingMovementMethod());
 
         // Setup listeners for the two buttons
         final ImageButton buttonGetTCP = (ImageButton) findViewById(R.id.getTcpData);
@@ -146,51 +151,68 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         WifiInfo wifiInfo;
                         wifiInfo = mainWifiObj.getConnectionInfo();
 
-                        while(! wifiInfo.getSSID().contains(ssid)) {
+                        Integer timeout = 20;
+                        while((timeout > 0) &&
+                              (
+                                (!wifiInfo.getSSID().replaceAll("\"", "").equals(ssid)) ||
+                                (wifiInfo.getBSSID().equals("00:00:00:00:00:00")) ||
+                                (wifiInfo.getIpAddress() == 0)
+                              )
+                             ) {
                             wifiInfo = mainWifiObj.getConnectionInfo();
+                            timeout--;
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
+                        Log.w("Compare return", String.valueOf((wifiInfo.getSSID().contains(ssid))));
+                        Log.w("SSID", wifiInfo.getSSID());
+                        Log.w("Status", wifiInfo.getBSSID());
 
-                        while( wifiInfo.getIpAddress() == 0) {
-                            wifiInfo = mainWifiObj.getConnectionInfo();
-                        }
-
-                        SupplicantState wifiSupp;
-                        wifiSupp = wifiInfo.getSupplicantState();
-
-                        while (wifiSupp != SupplicantState.COMPLETED)
-                        {
+                        if(0 == timeout) {
+                            mCurrentStatus.append(" ERROR: " + ssid + " not found");
+                            mCurrentStatus.append(System.getProperty("line.separator"));
+                        } else {
+                            SupplicantState wifiSupp;
                             wifiSupp = wifiInfo.getSupplicantState();
+                            while (wifiSupp != SupplicantState.COMPLETED)
+                            {
+                                wifiSupp = wifiInfo.getSupplicantState();
+                            }
+
+                            Log.i("SSID", wifiInfo.getSSID() + " " + ssid);
+                            Log.i("IP", String.valueOf(wifiInfo.getIpAddress()));
+                            Log.i("SUPP", String.valueOf(wifiInfo.getSupplicantState()));
+
+                            ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+                            NetworkInfo networkInfo = null;
+                            if (connectivityManager != null) {
+                                networkInfo = connectivityManager.getActiveNetworkInfo();
+                            }
+
+                            while (!(networkInfo != null && networkInfo.getState() == NetworkInfo.State.CONNECTED)) {
+                                networkInfo = connectivityManager.getActiveNetworkInfo();
+                                //Wait
+                            }
+
+                            mCurrentStatus.append(" Connected");
+                            mCurrentStatus.append(System.getProperty("line.separator"));
+
+                            // start transfer task
+                            mCurrentStatus.append("Starting the transfer...");
+                            if (mTcpClient == null) {
+                                new ConnectTask().execute("");
+                            }
+
+                            mTcpClient = null;
+
+                            // process received data on success
+                            mCurrentStatus.append(" Done");
+                            mCurrentStatus.append(System.getProperty("line.separator"));
+                            break;
                         }
-
-                        Log.i("SSID: ", wifiInfo.getSSID() + " " + ssid);
-                        Log.i("IP  : ", String.valueOf(wifiInfo.getIpAddress()));
-                        Log.i("SUPP: ", String.valueOf(wifiInfo.getSupplicantState()));
-
-
-                        ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-                        NetworkInfo networkInfo = null;
-                        if (connectivityManager != null) {
-                            networkInfo = connectivityManager.getActiveNetworkInfo();
-                        }
-
-                        while (!(networkInfo != null && networkInfo.getState() == NetworkInfo.State.CONNECTED)) {
-                            networkInfo = connectivityManager.getActiveNetworkInfo();
-                            //Wait
-                        }
-/**/
-                        mCurrentStatus.append(" Connected");
-                        mCurrentStatus.append(System.getProperty("line.separator"));
-
-                        // start transfer task
-                        mCurrentStatus.append("Starting the transfer...");
-                        if (mTcpClient == null) {
-                            new ConnectTask().execute("");
-                        }
-
-                        // process received data on success
-                        mCurrentStatus.append(" Done");
-                        mCurrentStatus.append(System.getProperty("line.separator"));
-                        break;
                 }
             }
         });
@@ -273,21 +295,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
-            Date cDate = new Date();
-            String dateNow = new SimpleDateFormat("yyyy-MM-dd").format(cDate);
 
             mCurrentStatus.append(values[0]);
             mCurrentStatus.append(System.getProperty("line.separator"));
-            Log.i("Rcv: ", values[0]);
-/*            try {
-                FileWriter fOut = new FileWriter(dateNow + ".log",  true);
-                fOut.write(values[0]);
-                fOut.flush();
-                fOut.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-*/
+
+            String[] separated = values[0].split(",");
+            Log.i(separated[0], separated[1]);
+            ReceivedData.put(separated[0], separated[1]);
 
             //in the arrayList we add the messaged received from server
             //arrayList.add(values[0]);

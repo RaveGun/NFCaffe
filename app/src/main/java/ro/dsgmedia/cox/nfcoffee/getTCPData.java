@@ -81,12 +81,14 @@ public class getTCPData {
             //here you must put your computer's IP address.
             InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
 
-            Log.e("TCP Client", "C: Connecting to ... " + serverAddr);
+            Log.i("TCP Client", "C: Connecting to ... " + serverAddr);
 
             //create a socket to make the connection with the server
-            Socket socket = new Socket(serverAddr, SERVER_PORT);
+            Socket socket = null;
 
+            Thread.sleep(666);
             try {
+                socket = new Socket(serverAddr, SERVER_PORT);
 
                 //sends the message to the server
                 mBufferOut = new DataOutputStream(socket.getOutputStream());
@@ -114,6 +116,7 @@ public class getTCPData {
                 sendBytes(secretKey);
                 //sendMessage(Constants.LOGIN_NAME);
 
+                Integer timeout = 10000;
                 while (mRun) {
 
                     mServerMessage = mBufferIn.readLine();
@@ -121,8 +124,13 @@ public class getTCPData {
                     if (mServerMessage != null && mMessageListener != null) {
                         //call the method messageReceived from MyActivity class
                         mMessageListener.messageReceived(mServerMessage);
+                    } else {
+                        timeout--;
                     }
-
+                    if(0 == timeout) {
+                        mRun = false;
+                        stopClient();
+                    }
                 }
 
                 Log.e("RESPONSE FROM SERVER", "S: Received Message: '" + mServerMessage + "'");
@@ -130,11 +138,17 @@ public class getTCPData {
             } catch (Exception e) {
 
                 Log.e("TCP", "S: Error", e);
+                mRun = false;
 
             } finally {
                 //the socket must be closed. It is not possible to reconnect to this socket
                 // after it is closed, which means a new socket instance has to be created.
-                socket.close();
+                if (socket != null) {
+                    socket.close();
+                    Log.w("TCP : ", "OVER");
+                    mRun = false;
+                }
+
             }
 
         } catch (Exception e) {
