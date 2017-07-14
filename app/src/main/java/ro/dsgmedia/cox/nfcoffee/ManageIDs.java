@@ -3,6 +3,7 @@ package ro.dsgmedia.cox.nfcoffee;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -33,6 +34,9 @@ public class ManageIDs extends AppCompatActivity {
     private LinkedHashMap<String, String> nameNFCID = new LinkedHashMap<>();;
     private int toDeleteItemPosition;
 
+    private SQLiteOpenHelper dbHelper;
+    private SQLiteDatabase mydatabase;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +45,8 @@ public class ManageIDs extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        dbHelper = new SqlHelper_NFCIDs(this);
+        mydatabase = dbHelper.getWritableDatabase();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.NFCReadNewID);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -66,7 +72,7 @@ public class ManageIDs extends AppCompatActivity {
                 mList.setItemChecked(mList.getSelectedItemPosition(), false);
                 toDeleteItemPosition = -1;
 
-                ArrayList<String> selectedID = new ArrayList<String>(nameNFCID.values());
+                ArrayList<String> selectedID = new ArrayList<String>(nameNFCID.keySet());
                 Log.i("Name:", selectedID.get(position));
 
                 Intent EditIDIntent = new Intent(ManageIDs.this, EditID.class);
@@ -124,11 +130,9 @@ public class ManageIDs extends AppCompatActivity {
         nameNFCID.clear();
 
         // Get the know IDs from the database and put them in the HashMap
-        SQLiteDatabase mydatabase = openOrCreateDatabase("NFCoffee",MODE_PRIVATE, null);
-        mydatabase.execSQL("CREATE TABLE IF NOT EXISTS NFCIDTable(NFCID TEXT NOT NULL PRIMARY KEY, CODENAME TEXT NOT NULL, UNAME TEXT, EMAIL TEXT, COFF INT);");
-
-        Cursor rawQuerry = mydatabase.rawQuery("select * from NFCIDTable order by UNAME asc;", null);
+        Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM NFCIDTable order by UNAME asc;", null);
         rawQuerry.moveToFirst();
+
         for(int i = 0; i < rawQuerry.getCount(); i++)
         {
             String NFCIDString = rawQuerry.getString(0);
@@ -142,12 +146,10 @@ public class ManageIDs extends AppCompatActivity {
                 Coffees = "NA";
             }
 
-            nameNFCID.put(UserName + " [" + Coffees + "]", CodeNameString);
-            Log.i("Found: ", UserName);
+            nameNFCID.put(CodeNameString, UserName + " [" + Coffees + "]");
             rawQuerry.moveToNext();
         }
         rawQuerry.close();
-        mydatabase.close();
 
         List<HashMap<String, String>> listHItems = new ArrayList<>();
         SimpleAdapter adapter = new SimpleAdapter(ManageIDs.this, listHItems, R.layout.list_item,
@@ -157,8 +159,8 @@ public class ManageIDs extends AppCompatActivity {
         while(it.hasNext()) {
             HashMap<String, String> resultsMap = new HashMap<>();
             Map.Entry pair = (Map.Entry)it.next();
-            resultsMap.put("First Line", pair.getKey().toString());
-            resultsMap.put("Second Line", pair.getValue().toString());
+            resultsMap.put("First Line", pair.getValue().toString());
+            resultsMap.put("Second Line", pair.getKey().toString());
             listHItems.add(resultsMap);
         }
         mList.setAdapter(adapter);

@@ -31,4 +31,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     compile 'com.github.clans:fab:1.6.4'
+    //compile 'com.bettervectordrawable:lib:0.8+'
 }

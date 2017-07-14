@@ -6,6 +6,7 @@ package ro.dsgmedia.cox.nfcoffee;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -52,6 +53,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.*;
 import java.net.Socket;
 import java.io.InputStream;
@@ -61,23 +63,24 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+
+    private int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 0x3141;
 
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private NavigationView mOptionsView;
     private TextView mCurrentStatus;
-    private getTCPData mTcpClient = null;
-    private int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 0x3141;
+    private ImageButton buttonGetTCP;
+
     private WifiManager mainWifiObj;
 
-    private HashMap<String,String> ReceivedData = new HashMap<String, String>();
+    private getTCPData mTcpClient = null;
 
- /*    private void setNavigationViewListner() {
-        NavigationView navigationView = (NavigationView) findViewById(R.id.navigation_item_settings);
-        navigationView.setNavigationItemSelectedListener(this);
-    }*/
+    private SQLiteOpenHelper dbHelper;
+    private SQLiteDatabase mydatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +98,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        dbHelper = new SqlHelper_NFCIDs(this);
+        mydatabase = dbHelper.getWritableDatabase();
+
         // Code here will be triggered once the drawer closes as we don't want anything to happen so we leave this blank
         mActionBarDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
@@ -107,112 +113,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mCurrentStatus = (TextView) findViewById(R.id.mCurrentStatus);
         mCurrentStatus.setMovementMethod(new ScrollingMovementMethod());
+        mCurrentStatus.setText("");
 
         // Setup listeners for the two buttons
-        final ImageButton buttonGetTCP = (ImageButton) findViewById(R.id.getTcpData);
+        buttonGetTCP = (ImageButton) findViewById(R.id.getTcpData);
         buttonGetTCP.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // detect the view that was "clicked"
                 switch (view.getId()) {
                     case R.id.getTcpData:
-                        mCurrentStatus.setText("We roll..");
-                        mCurrentStatus.append(System.getProperty("line.separator"));
-
-                        // check settings
-                        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-                        String ssid = sharedPref.getString("wifiNFCSSID", "NoWiFi");
-                        String key = sharedPref.getString("wifiNFCPWD", "nofreecoffee");
-                        // check wifi status
-                        mainWifiObj = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                        if (mainWifiObj.isWifiEnabled() == false)
-                        {
-                            mCurrentStatus.append("Enable WiFi..");
-                            mainWifiObj.setWifiEnabled(true);
-                            mCurrentStatus.append(" Enabled");
-                            mCurrentStatus.append(System.getProperty("line.separator"));
-
-                        }
-                        // connect to wifi
-                        mCurrentStatus.append("Setting WiFi...");
-                        WifiConfiguration wifiConfig = new WifiConfiguration();
-                        wifiConfig.SSID = String.format("\"%s\"", ssid);
-                        wifiConfig.preSharedKey = String.format("\"%s\"", key);
-                        mCurrentStatus.append(" Done");
-                        mCurrentStatus.append(System.getProperty("line.separator"));
-
-
-                        int netId = mainWifiObj.addNetwork(wifiConfig);
-                        mCurrentStatus.append("Connecting to WiFi...");
-                        //mainWifiObj.disconnect();
-                        mainWifiObj.enableNetwork(netId, true);
-                        mainWifiObj.reconnect();
-
-                        WifiInfo wifiInfo;
-                        wifiInfo = mainWifiObj.getConnectionInfo();
-
-                        Integer timeout = 20;
-                        while((timeout > 0) &&
-                              (
-                                (!wifiInfo.getSSID().replaceAll("\"", "").equals(ssid)) ||
-                                (wifiInfo.getBSSID().equals("00:00:00:00:00:00")) ||
-                                (wifiInfo.getIpAddress() == 0)
-                              )
-                             ) {
-                            wifiInfo = mainWifiObj.getConnectionInfo();
-                            timeout--;
-                            try {
-                                Thread.sleep(500);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        Log.w("Compare return", String.valueOf((wifiInfo.getSSID().contains(ssid))));
-                        Log.w("SSID", wifiInfo.getSSID());
-                        Log.w("Status", wifiInfo.getBSSID());
-
-                        if(0 == timeout) {
-                            mCurrentStatus.append(" ERROR: " + ssid + " not found");
-                            mCurrentStatus.append(System.getProperty("line.separator"));
-                        } else {
-                            SupplicantState wifiSupp;
-                            wifiSupp = wifiInfo.getSupplicantState();
-                            while (wifiSupp != SupplicantState.COMPLETED)
-                            {
-                                wifiSupp = wifiInfo.getSupplicantState();
-                            }
-
-                            Log.i("SSID", wifiInfo.getSSID() + " " + ssid);
-                            Log.i("IP", String.valueOf(wifiInfo.getIpAddress()));
-                            Log.i("SUPP", String.valueOf(wifiInfo.getSupplicantState()));
-
-                            ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-                            NetworkInfo networkInfo = null;
-                            if (connectivityManager != null) {
-                                networkInfo = connectivityManager.getActiveNetworkInfo();
-                            }
-
-                            while (!(networkInfo != null && networkInfo.getState() == NetworkInfo.State.CONNECTED)) {
-                                networkInfo = connectivityManager.getActiveNetworkInfo();
-                                //Wait
-                            }
-
-                            mCurrentStatus.append(" Connected");
-                            mCurrentStatus.append(System.getProperty("line.separator"));
-
-                            // start transfer task
-                            mCurrentStatus.append("Starting the transfer...");
                             if (mTcpClient == null) {
+                                buttonGetTCP.setPressed(true);
+                                mCurrentStatus.setText("");
                                 new ConnectTask().execute("");
                             }
-
-                            mTcpClient = null;
-
-                            // process received data on success
-                            mCurrentStatus.append(" Done");
-                            mCurrentStatus.append(System.getProperty("line.separator"));
+                            //mTcpClient = null;
                             break;
-                        }
                 }
             }
         });
@@ -274,21 +191,126 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public class ConnectTask extends AsyncTask<String, String, getTCPData> {
+        private HashMap<String,String> ReceivedData = new HashMap<String, String>();
 
         @Override
         protected getTCPData doInBackground(String... message) {
+            // check settings
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+            String ssid = sharedPref.getString("wifiNFCSSID", "NoWiFi");
+            String key = sharedPref.getString("wifiNFCPWD", "nofreecoffee");
+            // check wifi status
+            mainWifiObj = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if (mainWifiObj.isWifiEnabled() == false) {
+                publishProgress("Enable WiFi..");
+                mainWifiObj.setWifiEnabled(true);
+                publishProgress(" Enabled" + System.getProperty("line.separator"));
+            }
 
-            //we create a TCPClient object and
-            mTcpClient = new getTCPData(new getTCPData.OnMessageReceived() {
-                @Override
-                //here the messageReceived method is implemented
-                public void messageReceived(String message) {
-                    //this method calls the onProgressUpdate
-                    publishProgress(message);
+            // connect to wifi
+            publishProgress("Setting WiFi...");
+            WifiConfiguration wifiConfig = new WifiConfiguration();
+            wifiConfig.SSID = String.format("\"%s\"", ssid);
+            wifiConfig.preSharedKey = String.format("\"%s\"", key);
+            publishProgress(" Done" + System.getProperty("line.separator"));
+
+            int netId = mainWifiObj.addNetwork(wifiConfig);
+            publishProgress("Connecting to WiFi...");
+            //mainWifiObj.disconnect();
+            mainWifiObj.enableNetwork(netId, true);
+            mainWifiObj.reconnect();
+
+            WifiInfo wifiInfo;
+            wifiInfo = mainWifiObj.getConnectionInfo();
+
+            Integer timeout = 20;
+            while ((timeout > 0) &&
+                    (
+                            (!wifiInfo.getSSID().replaceAll("\"", "").equals(ssid)) ||
+                                    (wifiInfo.getBSSID().equals("00:00:00:00:00:00")) ||
+                                    (wifiInfo.getIpAddress() == 0)
+                    )
+                    ) {
+                wifiInfo = mainWifiObj.getConnectionInfo();
+                timeout--;
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            });
-            Log.i("Connecting...", "OK");
-            mTcpClient.run();
+            }
+            Log.w("Compare return", String.valueOf((wifiInfo.getSSID().contains(ssid))));
+            Log.w("SSID", wifiInfo.getSSID());
+            Log.w("Status", wifiInfo.getBSSID());
+
+            if (0 == timeout) {
+                publishProgress(" ERROR: " + ssid + " not found" + System.getProperty("line.separator"));
+            } else {
+                SupplicantState wifiSupp;
+                wifiSupp = wifiInfo.getSupplicantState();
+                while (wifiSupp != SupplicantState.COMPLETED) {
+                    wifiSupp = wifiInfo.getSupplicantState();
+                }
+
+                Log.i("SSID", wifiInfo.getSSID() + " " + ssid);
+                Log.i("IP", String.valueOf(wifiInfo.getIpAddress()));
+                Log.i("SUPP", String.valueOf(wifiInfo.getSupplicantState()));
+
+                ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = null;
+                if (connectivityManager != null) {
+                    networkInfo = connectivityManager.getActiveNetworkInfo();
+                }
+
+                while (!(networkInfo != null && networkInfo.getState() == NetworkInfo.State.CONNECTED)) {
+                    networkInfo = connectivityManager.getActiveNetworkInfo();
+                    //Wait
+                }
+
+                publishProgress(" Connected" + System.getProperty("line.separator"));
+
+                // start transfer task
+                publishProgress("Starting the transfer...");
+
+                //we create a TCPClient object and
+                mTcpClient = new getTCPData(new getTCPData.OnMessageReceived() {
+                    @Override
+                    //here the messageReceived method is implemented
+                    public void messageReceived(String message) {
+                        //this method calls the onProgressUpdate
+
+                        String[] separated = message.split(",");
+                        Log.i(separated[0], separated[1]);
+                        ReceivedData.put(separated[0], separated[1]);
+
+                        publishProgress(message);
+                    }
+                });
+                Log.i("Connecting...", "OK");
+                mTcpClient.run();
+
+                // process received data on success
+                publishProgress(" Done" + System.getProperty("line.separator"));
+
+                // start with the SQL database update
+                ContentValues data=new ContentValues();
+                for (Map.Entry<String,String> entry: ReceivedData.entrySet()) {
+                    String codeName = entry.getKey();
+                    String value = entry.getValue();
+                    data.put(SqlHelper_NFCIDs.NB_COFFEES, Integer.valueOf(value));
+                    String NFCID = RevertBase36(codeName);
+
+                    if(0 == mydatabase.update(SqlHelper_NFCIDs.TABLE_NAME, data, SqlHelper_NFCIDs.CODE_NAME+"=\""+codeName+"\"", null )) {
+                        mydatabase.beginTransaction();
+                        data.put(SqlHelper_NFCIDs.NFC_ID, NFCID);
+                        data.put(SqlHelper_NFCIDs.CODE_NAME, codeName);
+                        mydatabase.insert(SqlHelper_NFCIDs.TABLE_NAME, null, data);
+                        mydatabase.setTransactionSuccessful();
+                        mydatabase.endTransaction();
+                    }
+                    data.clear();
+                }
+            }
             return null;
         }
 
@@ -299,15 +321,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             mCurrentStatus.append(values[0]);
             mCurrentStatus.append(System.getProperty("line.separator"));
 
-            String[] separated = values[0].split(",");
-            Log.i(separated[0], separated[1]);
-            ReceivedData.put(separated[0], separated[1]);
-
             //in the arrayList we add the messaged received from server
             //arrayList.add(values[0]);
             // notify the adapter that the data set has changed. This means that new message received
             // from server was added to the list
             //mAdapter.notifyDataSetChanged();
         }
+    }
+
+    private String RevertBase36(String inCodeName) {
+        String[] splited;
+        splited = inCodeName.split("\\.");
+        inCodeName = splited[0]+splited[1];
+        BigInteger NFCIdValue = new BigInteger(inCodeName, 36);
+        return NFCIdValue.toString(16).toUpperCase();
     }
 }

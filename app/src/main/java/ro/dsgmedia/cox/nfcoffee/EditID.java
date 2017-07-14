@@ -2,6 +2,7 @@ package ro.dsgmedia.cox.nfcoffee;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,9 +14,11 @@ import java.math.BigInteger;
 
 public class EditID extends AppCompatActivity {
     TextView etCardID, etCodeName, etName, etEMAil, etCoffees;
-
     Button bSaveData;
     Button bCancel;
+
+    private SQLiteOpenHelper dbHelper;
+    private SQLiteDatabase mydatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,27 +36,20 @@ public class EditID extends AppCompatActivity {
         bSaveData = (Button) findViewById(R.id.editID_bSave);
         bCancel = (Button) findViewById(R.id.editID_bCancel);
 
+        dbHelper = new SqlHelper_NFCIDs(this);
+        mydatabase = dbHelper.getWritableDatabase();
+
         bSaveData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SQLiteDatabase mydatabase = openOrCreateDatabase("NFCoffee",MODE_PRIVATE, null);
-                mydatabase.execSQL("CREATE TABLE IF NOT EXISTS NFCIDTable(NFCID TEXT NOT NULL PRIMARY KEY, CODENAME TEXT NOT NULL, UNAME TEXT, EMAIL TEXT, COFF INT);");
 
-                Log.i("SQLQuery:", "INSERT OR REPLACE INTO NFCIDTable VALUES (\""+
+                mydatabase.execSQL("INSERT OR REPLACE INTO "+SqlHelper_NFCIDs.TABLE_NAME+" VALUES (\""+
                         etCardID.getText() + "\",\"" +
                         etCodeName.getText() + "\",\"" +
                         etName.getText() + "\",\"" +
                         etEMAil.getText() + "\",\"" +
                         etCoffees.getText() + "\");");
 
-                mydatabase.execSQL("INSERT OR REPLACE INTO NFCIDTable VALUES (\""+
-                        etCardID.getText() + "\",\"" +
-                        etCodeName.getText() + "\",\"" +
-                        etName.getText() + "\",\"" +
-                        etEMAil.getText() + "\",\"" +
-                        etCoffees.getText() + "\");");
-
-                mydatabase.close();
                 finish();
 
                 /*
@@ -84,36 +80,32 @@ public class EditID extends AppCompatActivity {
             NFCIDValue = extras.getByteArray("NFC_ID");
             if (NFCIDValue != null)
             {
+                String NFCIDString = ByteArrayToHexString(NFCIDValue);
                 // We got an ID. Set the ID field value.
-                String localCodeName = ByteToBase36(NFCIDValue);
-                Log.i("RCVID:", ByteArrayToHexString(NFCIDValue));
+                String localCodeName = ByteToBase36(NFCIDString);
+                Log.i("RCVID:", NFCIDString);
                 Log.i("RCVCN:", localCodeName);
 
-                SQLiteDatabase mydatabase = openOrCreateDatabase("NFCoffee",MODE_PRIVATE, null);
-                Cursor rawQuerry = mydatabase.rawQuery("Select * from NFCIDTable where CODENAME='"+localCodeName+"';", null);
+                Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM "+SqlHelper_NFCIDs.TABLE_NAME+" WHERE CODENAME='"+localCodeName+"';", null);
 
                 if(0 != rawQuerry.getCount()) {
                     rawQuerry.moveToFirst();
                     String UserName = rawQuerry.getString(2);
                     String Email = rawQuerry.getString(3);
                     String Coffees = String.valueOf(rawQuerry.getInt(4));
-                    SetNFCIDTextField(ByteArrayToHexString(NFCIDValue), localCodeName, UserName, Email, Coffees);
+                    SetNFCIDTextField(NFCIDString, localCodeName, UserName, Email, Coffees);
                 }
                 else
                 {
-                    SetNFCIDTextField(ByteArrayToHexString(NFCIDValue), localCodeName, "", "", "0");
+                    SetNFCIDTextField(NFCIDString, localCodeName, "", "", "0");
                 }
                 rawQuerry.close();
-                mydatabase.close();
             } else {
 
                 String NFCIDString = extras.getString("CODE_NAME");
                 if (NFCIDString != null) {
                     // We got an ID. Set the ID field value.
-                    Log.i("RCVCN:", NFCIDString);
-
-                    SQLiteDatabase mydatabase = openOrCreateDatabase("NFCoffee", MODE_PRIVATE, null);
-                    Cursor rawQuerry = mydatabase.rawQuery("Select * from NFCIDTable where CODENAME='" + NFCIDString + "';", null);
+                    Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM "+SqlHelper_NFCIDs.TABLE_NAME+" WHERE CODENAME='" + NFCIDString + "';", null);
 
                     if (0 != rawQuerry.getCount()) {
                         rawQuerry.moveToFirst();
@@ -124,7 +116,6 @@ public class EditID extends AppCompatActivity {
                         SetNFCIDTextField(NFCID, NFCIDString, UserName, Email, Coffees);
                     }
                     rawQuerry.close();
-                    mydatabase.close();
                 }
             }
         }
@@ -146,53 +137,22 @@ public class EditID extends AppCompatActivity {
     }
 
     private String ByteArrayToHexString(byte [] inarray) {
-        int i, j, in;
-        String [] hex = {"0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"};
-        String out= "";
-
-        for(j = 0 ; j < inarray.length ; ++j)
-        {
-            in = (int) inarray[j] & 0xff;
-            i = (in >> 4) & 0x0f;
-            out += hex[i];
-            i = in & 0x0f;
-            out += hex[i];
+        BigInteger res = BigInteger.valueOf(inarray[inarray.length - 1] & 0xff);
+        for(int j = (inarray.length - 2) ; j >= 0 ; j--) {
+            res = res.multiply(BigInteger.valueOf(256));
+            res = res.add(BigInteger.valueOf(inarray[j] & 0xff));
         }
+        String out = res.toString(16).toUpperCase();
         return out;
     }
 
-    private String ByteToBase36(byte [] inarray) {
-        int i, j;
-        BigInteger in;
-        String [] baseC = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-                            "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
-                            "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
-                            "U", "V", "W", "X", "Y", "Z"};
-        String out= "";
-
-        i =  0;
-        in = BigInteger.valueOf(0);
-        for(j = 0; j < inarray.length; ++j) {
-            BigInteger localByte = BigInteger.valueOf(inarray[j] & 0xFF);
-            localByte = localByte.shiftLeft(j*8);
-            in = in.or(localByte);
-            i++;
-        }
-
-        j = 0;
-        while (0 != in.compareTo(BigInteger.valueOf(0))) {
-            out = baseC[in.mod(BigInteger.valueOf(36)).intValue()] + out;
-            in = in.divide(BigInteger.valueOf(36));
-            j++;
-            if (3 == j) {
-                j++;
-                out = "." + out;
-            }
-        }
-        while (j <= 11) {
-            out = "0" + out;
-            j++;
-        }
+    private String ByteToBase36(String inarray) {
+        BigInteger in = new BigInteger(inarray,16);
+        String out= in.toString(36).toUpperCase();
+        out = String.format("%1$11s", out).replace(' ', '0');
+        String extension = out.substring(out.length() - 3);
+        String filename = out.substring(0, out.length() - 3);
+        out = filename + "." + extension;
         return out;
     }
 }

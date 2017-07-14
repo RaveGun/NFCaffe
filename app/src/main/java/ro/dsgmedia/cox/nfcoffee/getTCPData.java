@@ -132,14 +132,9 @@ public class getTCPData {
                         stopClient();
                     }
                 }
-
-                Log.e("RESPONSE FROM SERVER", "S: Received Message: '" + mServerMessage + "'");
-
             } catch (Exception e) {
-
-                Log.e("TCP", "S: Error", e);
+                Log.w("TCP", "S: Error", e);
                 mRun = false;
-
             } finally {
                 //the socket must be closed. It is not possible to reconnect to this socket
                 // after it is closed, which means a new socket instance has to be created.
@@ -148,18 +143,13 @@ public class getTCPData {
                     Log.w("TCP : ", "OVER");
                     mRun = false;
                 }
-
             }
-
         } catch (Exception e) {
-
             Log.e("TCP", "C: Error", e);
-
         }
-
     }
 
-    //Declare the interface. The method messageReceived(String message) will must be implemented in the MyActivity
+    //Declare the interface. The method messageReceived(String message) will must be implemented in the MainActivity
     //class at on asynckTask doInBackground
     public interface OnMessageReceived {
         public void messageReceived(String message);
