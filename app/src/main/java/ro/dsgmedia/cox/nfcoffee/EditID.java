@@ -126,6 +126,12 @@ public class EditID extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onStop() {
+        if (mydatabase != null && mydatabase.isOpen())
+            mydatabase.close();
+        super.onStop();
+    }
 
     private void SetNFCIDTextField(String valueID, String valueCodeName, String valueName, String valueEmail, String coffees) {
         etCardID.setText(valueID);

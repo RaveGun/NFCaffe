@@ -45,9 +45,6 @@ public class ManageIDs extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        dbHelper = new SqlHelper_NFCIDs(this);
-        mydatabase = dbHelper.getWritableDatabase();
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.NFCReadNewID);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,6 +60,10 @@ public class ManageIDs extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        dbHelper = new SqlHelper_NFCIDs(this);
+        mydatabase = dbHelper.getWritableDatabase();
+
         updateListView();
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -91,6 +92,13 @@ public class ManageIDs extends AppCompatActivity {
                 return true;
             }
         });
+    }
+
+    @Override
+    public void onStop() {
+        if (mydatabase != null && mydatabase.isOpen())
+            mydatabase.close();
+        super.onStop();
     }
 
     @Override
