@@ -4,7 +4,10 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -19,7 +22,12 @@ import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +42,7 @@ public class ManageIDs extends AppCompatActivity {
     private MenuItem mDeleteID;
     private LinkedHashMap<String, String> nameNFCID = new LinkedHashMap<>();;
     private int toDeleteItemPosition;
+    FloatingActionMenu fabMAIN;
 
     private SQLiteOpenHelper dbHelper;
     private SQLiteDatabase mydatabase;
@@ -50,6 +59,7 @@ public class ManageIDs extends AppCompatActivity {
         FloatingActionButton fabRNID = (FloatingActionButton) findViewById(R.id.NFCReadNewID);
         FloatingActionButton fabEXID = (FloatingActionButton) findViewById(R.id.NFCExportIDs);
         FloatingActionButton fabIMID = (FloatingActionButton) findViewById(R.id.NFCImportIDs);
+        fabMAIN = (FloatingActionMenu) findViewById(R.id.openOptionsIDs);
 
         fabRNID.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,7 +73,14 @@ public class ManageIDs extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Export here the IDs to Download folder
-                Toast.makeText(ManageIDs.this, "Exporting not implemented yet!", Toast.LENGTH_SHORT).show();
+                if(false == isExternalStorageWritable()) {
+                    Toast.makeText(ManageIDs.this, "External storage not available!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(true == exportDataToDocumentsStorageDir("export.cvs")) {
+                    Toast.makeText(ManageIDs.this, "Data was saved.", Toast.LENGTH_SHORT).show();
+                }
+                fabMAIN.close(true);
             }
         });
 
@@ -72,7 +89,11 @@ public class ManageIDs extends AppCompatActivity {
             public void onClick(View v) {
                 // Import here the IDs to Download folder
                 // Will be done latter.
-                Toast.makeText(ManageIDs.this, "Importing not available!", Toast.LENGTH_SHORT).show();
+                if(false == isExternalStorageReadable()) {
+                    Toast.makeText(ManageIDs.this, "External storage not available!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Toast.makeText(ManageIDs.this, "Storage available for reading.", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -87,6 +108,8 @@ public class ManageIDs extends AppCompatActivity {
         mydatabase = dbHelper.getWritableDatabase();
 
         updateListView();
+
+        fabMAIN.close(true);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -195,4 +218,48 @@ public class ManageIDs extends AppCompatActivity {
         mList.setAdapter(adapter);
     }
 
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean exportDataToDocumentsStorageDir(String fileName) {
+        // Get the directory for the user's public documents directory.
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        File file = new File(path, fileName);
+        try {
+            path.mkdir();
+            OutputStream os = new FileOutputStream(file);
+            os.write(0xABCD);
+            os.close();
+            // Tell the media scanner about the new file so that it is
+            // immediately available to the user.
+            MediaScannerConnection.scanFile(this,
+                    new String[] { file.toString() }, null,
+                    new MediaScannerConnection.OnScanCompletedListener() {
+                        public void onScanCompleted(String path, Uri uri) {
+                            Log.i("STORAGE", "Scanned " + path + ":");
+                            Log.i("STORAGE", "-> uri=" + uri);
+                        }
+                    });
+            return true;
+        } catch (IOException e) {
+            Log.w("STORAGE", "Error writing " + file, e);
+            return false;
+        }
+    }
 }
