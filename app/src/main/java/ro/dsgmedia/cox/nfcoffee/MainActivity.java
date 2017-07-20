@@ -69,6 +69,8 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 0x3141;
+    private int PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 0x3142;
+
 
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
@@ -91,6 +93,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION);
+            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         }
 
@@ -188,6 +195,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // granted permission for WiFi
+            // all good
+        }
+        if (requestCode == PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // granted permission for WiFi
             // all good
