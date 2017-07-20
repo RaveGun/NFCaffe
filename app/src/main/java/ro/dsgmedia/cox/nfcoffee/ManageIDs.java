@@ -47,12 +47,32 @@ public class ManageIDs extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.NFCReadNewID);
-        fab.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton fabRNID = (FloatingActionButton) findViewById(R.id.NFCReadNewID);
+        FloatingActionButton fabEXID = (FloatingActionButton) findViewById(R.id.NFCExportIDs);
+        FloatingActionButton fabIMID = (FloatingActionButton) findViewById(R.id.NFCImportIDs);
+
+        fabRNID.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View v) {
                 Intent ReadNFCIntent = new Intent(ManageIDs.this, NFCReadCard.class);
                 startActivity(ReadNFCIntent);
+            }
+        });
+
+        fabEXID.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Export here the IDs to Download folder
+                Toast.makeText(ManageIDs.this, "Exporting not implemented yet!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        fabIMID.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Import here the IDs to Download folder
+                // Will be done latter.
+                Toast.makeText(ManageIDs.this, "Importing not available!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -119,7 +139,7 @@ public class ManageIDs extends AppCompatActivity {
                 if(-1 != toDeleteItemPosition) {
                     String uName = ((Map.Entry)((java.util.HashMap)mList.getItemAtPosition(toDeleteItemPosition)).entrySet().toArray()[0]).getValue().toString();
                     String whereClause = SqlHelper_NFCIDs.CODE_NAME + " ='" + uName + "'";
-                    Toast.makeText(ManageIDs.this, "Deleting " + uName, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ManageIDs.this, uName + " deleted!", Toast.LENGTH_SHORT).show();
                     mydatabase.delete(SqlHelper_NFCIDs.TABLE_NAME, whereClause, null);
                     mDeleteID.setVisible(false);
                     toDeleteItemPosition = -1;

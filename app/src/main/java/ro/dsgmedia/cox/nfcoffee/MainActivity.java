@@ -228,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             WifiInfo wifiInfo;
             wifiInfo = mainWifiObj.getConnectionInfo();
 
-            Integer timeout = 20;
+            Integer timeout = 30;
             while ((timeout > 0) &&
                     (
                             (!wifiInfo.getSSID().replaceAll("\"", "").equals(ssid)) ||
