@@ -45,6 +45,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private NavigationView mOptionsView;
     private TextView mCurrentStatus;
     private ImageButton buttonGetTCP;
+    private ScrollView mScrollView;
 
     private WifiManager mainWifiObj;
 
@@ -97,6 +99,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mScrollView = (ScrollView) findViewById(R.id.mScroll);
 
         dbHelper = new SqlHelper_NFCIDs(this);
         mydatabase = dbHelper.getWritableDatabase();
@@ -199,6 +203,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
             String ssid = sharedPref.getString("wifiNFCSSID", "NoWiFi");
             String key = sharedPref.getString("wifiNFCPWD", "nofreecoffee");
+
             // check wifi status
             mainWifiObj = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (mainWifiObj.isWifiEnabled() == false) {
@@ -291,6 +296,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 // process received data on success
                 publishProgress(" Done" + System.getProperty("line.separator"));
+
+                mScrollView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mScrollView.fullScroll(ScrollView.FOCUS_DOWN);
+                    }
+                });
 
                 // start with the SQL database update
                 ContentValues data=new ContentValues();

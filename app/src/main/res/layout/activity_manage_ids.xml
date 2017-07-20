@@ -34,7 +34,7 @@
             android:footerDividersEnabled="false"
             android:headerDividersEnabled="false"
             android:listSelector="@android:color/transparent"
-            android:transcriptMode="alwaysScroll"
+            android:transcriptMode="normal"
         />
 
         <com.github.clans.fab.FloatingActionMenu
