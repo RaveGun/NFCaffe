@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -36,6 +37,7 @@ public class ManageIDs extends AppCompatActivity {
 
     private SQLiteOpenHelper dbHelper;
     private SQLiteDatabase mydatabase;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,8 +89,9 @@ public class ManageIDs extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 mDeleteID.setVisible(true);
                 mList.setItemChecked(position, true);
-                mList.setSelection(position);
+                //mList.setSelection(position);
                 toDeleteItemPosition = position;
+                //mList.smoothScrollToPosition(position);
                 return true;
             }
         });
@@ -113,13 +116,11 @@ public class ManageIDs extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.manageids_delete:
-                //menuItem = item;
-                //menuItem.setActionView(R.layout.progressbar);
-                //menuItem.expandActionView();
-                //TestTask task = new TestTask();
-                //task.execute("test");
                 if(-1 != toDeleteItemPosition) {
-                    Toast.makeText(ManageIDs.this, "Deleting " + ((Map.Entry)((java.util.HashMap)mList.getItemAtPosition(toDeleteItemPosition)).entrySet().toArray()[1]).getValue().toString(), Toast.LENGTH_SHORT).show();
+                    String uName = ((Map.Entry)((java.util.HashMap)mList.getItemAtPosition(toDeleteItemPosition)).entrySet().toArray()[0]).getValue().toString();
+                    String whereClause = SqlHelper_NFCIDs.CODE_NAME + " ='" + uName + "'";
+                    Toast.makeText(ManageIDs.this, "Deleting " + uName, Toast.LENGTH_SHORT).show();
+                    mydatabase.delete(SqlHelper_NFCIDs.TABLE_NAME, whereClause, null);
                     mDeleteID.setVisible(false);
                     toDeleteItemPosition = -1;
                     updateListView();
@@ -138,7 +139,7 @@ public class ManageIDs extends AppCompatActivity {
         nameNFCID.clear();
 
         // Get the know IDs from the database and put them in the HashMap
-        Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM NFCIDTable order by UNAME asc;", null);
+        Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM " + SqlHelper_NFCIDs.TABLE_NAME + " ORDER BY " + SqlHelper_NFCIDs.USER_NAME + " ASC;", null);
         rawQuerry.moveToFirst();
 
         for(int i = 0; i < rawQuerry.getCount(); i++)

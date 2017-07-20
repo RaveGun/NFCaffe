@@ -28,7 +28,7 @@ public class PreferencesActivity extends PreferenceActivity {
 
     /* WiFi and Preferences */
     private WifiManager mainWifiObj;
-    private ArrayList<String> wifis;
+    static private ArrayList<String> wifis;
     BroadcastReceiver BcastRx;
 
     @Override
@@ -77,7 +77,7 @@ public class PreferencesActivity extends PreferenceActivity {
         }
     }
 
-    public class MyPreferenceFragment extends PreferenceFragment
+    static public class MyPreferenceFragment extends PreferenceFragment
     {
         @Override
         public void onCreate(final Bundle savedInstanceState)
