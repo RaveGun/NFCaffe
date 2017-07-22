@@ -28,8 +28,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -77,8 +80,15 @@ public class ManageIDs extends AppCompatActivity {
                     Toast.makeText(ManageIDs.this, "External storage not available!", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(true == exportDataToDocumentsStorageDir("export.cvs")) {
-                    Toast.makeText(ManageIDs.this, "Data was saved.", Toast.LENGTH_SHORT).show();
+                Calendar c = Calendar.getInstance();
+                String cYear = String.valueOf(c.get(Calendar.YEAR));
+                String cMonth = String.valueOf(c.get(Calendar.MONTH));
+                String cDay = String.valueOf(c.get(Calendar.DAY_OF_MONTH));
+                String fName = "export_"+cYear+cMonth+cDay+".csv";
+                if(true == exportDataToDocumentsStorageDir(fName)) {
+                    Toast.makeText(ManageIDs.this, fName+" has been saved.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(ManageIDs.this, "UNKNOWN ERROR!!!", Toast.LENGTH_SHORT).show();
                 }
                 fabMAIN.close(true);
             }
@@ -191,12 +201,7 @@ public class ManageIDs extends AppCompatActivity {
             String CodeNameString = rawQuerry.getString(1);
             String UserName = rawQuerry.getString(2);
             String Email = rawQuerry.getString(3);
-            String Coffees = "0";
-            if(rawQuerry.getColumnCount() > 4) {
-                Coffees = String.valueOf(rawQuerry.getInt(4));
-            } else {
-                Coffees = "NA";
-            }
+            String Coffees = String.valueOf(rawQuerry.getInt(4));
 
             nameNFCID.put(CodeNameString, UserName + " [" + Coffees + "]");
             rawQuerry.moveToNext();
@@ -244,8 +249,30 @@ public class ManageIDs extends AppCompatActivity {
         try {
             path.mkdir();
             OutputStream os = new FileOutputStream(file);
-            os.write(0xABCD);
+            OutputStreamWriter osw = new OutputStreamWriter(os);
+
+            //Write header
+            osw.write("NFCID,CODENAME,UNAME,EMAIL,COFF\n");
+
+            Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM " + SqlHelper_NFCIDs.TABLE_NAME + " ORDER BY " + SqlHelper_NFCIDs.USER_NAME + " ASC;", null);
+            rawQuerry.moveToFirst();
+            for(int i = 0; i < rawQuerry.getCount(); i++)
+            {
+                String NFCIDString = rawQuerry.getString(0);
+                String CodeNameString = rawQuerry.getString(1);
+                String UserName = rawQuerry.getString(2);
+                String Email = rawQuerry.getString(3);
+                String Coffees = String.valueOf(rawQuerry.getInt(4));
+                String csvLine = NFCIDString+","+CodeNameString+","+UserName+","+Email+","+Coffees+"\n";
+                osw.write(csvLine);
+                rawQuerry.moveToNext();
+            }
+            rawQuerry.close();
+            osw.flush();
+            osw.close();
+            os.flush();
             os.close();
+
             // Tell the media scanner about the new file so that it is
             // immediately available to the user.
             MediaScannerConnection.scanFile(this,
