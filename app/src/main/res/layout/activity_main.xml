@@ -66,8 +66,8 @@
                             android:inputType="textMultiLine"
                             android:requiresFadingEdge="vertical"
                             android:scrollbars="vertical"
-                            android:text="Not connected\nTest"
-                            android:textAlignment="center" />
+                            android:textAlignment="center"
+                            android:textColor="@android:color/black" />
                     </LinearLayout>
                 </ScrollView>
 

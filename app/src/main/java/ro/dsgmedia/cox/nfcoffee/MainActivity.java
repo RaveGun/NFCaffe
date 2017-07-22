@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mCurrentStatus = (TextView) findViewById(R.id.mCurrentStatus);
         mCurrentStatus.setMovementMethod(new ScrollingMovementMethod());
-        mCurrentStatus.setText("");
+        mCurrentStatus.setText("Please disable DATA connection!");
 
         // Setup listeners for the two buttons
         buttonGetTCP = (ImageButton) findViewById(R.id.getTcpData);
@@ -134,13 +134,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 // detect the view that was "clicked"
                 switch (view.getId()) {
                     case R.id.getTcpData:
-                            if (mTcpClient == null) {
-                                buttonGetTCP.setPressed(true);
-                                mCurrentStatus.setText("");
-                                new ConnectTask().execute("");
-                            }
-                            //mTcpClient = null;
-                            break;
+                        if (mTcpClient == null) {
+                            buttonGetTCP.setPressed(true);
+                            mCurrentStatus.setText("");
+                            new ConnectTask().execute("");
+                        }
+                        //mTcpClient = null;
+                        break;
                 }
             }
         });
@@ -211,6 +211,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         @Override
         protected getTCPData doInBackground(String... message) {
+
             // check settings
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
             String ssid = sharedPref.getString("wifiNFCSSID", "NoWiFi");
@@ -243,9 +244,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Integer timeout = 30;
             while ((timeout > 0) &&
                     (
-                            (!wifiInfo.getSSID().replaceAll("\"", "").equals(ssid)) ||
-                                    (wifiInfo.getBSSID().equals("00:00:00:00:00:00")) ||
-                                    (wifiInfo.getIpAddress() == 0)
+                        (!wifiInfo.getSSID().replaceAll("\"", "").equals(ssid)) ||
+                                (wifiInfo.getBSSID().equals("00:00:00:00:00:00")) ||
+                                (wifiInfo.getIpAddress() == 0)
                     )
                     ) {
                 wifiInfo = mainWifiObj.getConnectionInfo();
@@ -284,7 +285,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     //Wait
                 }
 
-                publishProgress(" Connected" + System.getProperty("line.separator"));
+                publishProgress("Connected" + System.getProperty("line.separator"));
 
                 // start transfer task
                 publishProgress("Starting the transfer...");
@@ -303,11 +304,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         publishProgress(message);
                     }
                 });
-                Log.i("Connecting...", "OK");
                 mTcpClient.run();
 
                 // process received data on success
-                publishProgress(" Done" + System.getProperty("line.separator"));
+                publishProgress("Finished" + System.getProperty("line.separator"));
 
                 mScrollView.post(new Runnable() {
                     @Override
@@ -341,15 +341,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
-
+            buttonGetTCP.setPressed(true);
+            if(values[0].contains("Finished"))
+                buttonGetTCP.setPressed(false);
             mCurrentStatus.append(values[0]);
             mCurrentStatus.append(System.getProperty("line.separator"));
-
-            //in the arrayList we add the messaged received from server
-            //arrayList.add(values[0]);
-            // notify the adapter that the data set has changed. This means that new message received
-            // from server was added to the list
-            //mAdapter.notifyDataSetChanged();
         }
     }
 
