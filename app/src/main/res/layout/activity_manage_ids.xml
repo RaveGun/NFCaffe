@@ -54,7 +54,7 @@
             fab:menu_colorPressed="#E75043"
             fab:menu_colorRipple="#99FFFFFF"
             fab:menu_animationDelayPerItem="50"
-            fab:menu_icon="@drawable/ic_mode_edit_white_36dp"
+            fab:menu_icon="@drawable/ic_mode_edit_white_36px"
             fab:menu_buttonSpacing="0dp"
             fab:menu_labels_margin="0dp"
             fab:menu_labels_showAnimation="@anim/fab_slide_in_from_right"
@@ -80,10 +80,18 @@
             fab:menu_fab_label="">
 
             <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/NFCClearCounters"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_clear_white_36px"
+                fab:fab_size="normal"
+                fab:fab_label="Delete counters" />
+
+            <com.github.clans.fab.FloatingActionButton
                 android:id="@+id/NFCExportIDs"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_file_upload_white_36dp"
+                android:src="@drawable/ic_file_export_white_36px"
                 fab:fab_size="normal"
                 fab:fab_label="Export IDs" />
 
@@ -91,7 +99,7 @@
                 android:id="@+id/NFCImportIDs"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_file_download_white_36dp"
+                android:src="@drawable/ic_file_import_white_36px"
                 fab:fab_size="normal"
                 fab:fab_label="Import IDs" />
 
@@ -99,7 +107,7 @@
                 android:id="@+id/NFCReadNewID"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_nfc_white_36dp"
+                android:src="@drawable/ic_nfc_white_36px"
                 fab:fab_size="normal"
                 fab:fab_label="Scan ID" />
 

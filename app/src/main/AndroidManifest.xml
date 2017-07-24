@@ -21,7 +21,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -35,25 +36,31 @@
             android:name=".ManageIDs"
             android:label="@string/title_activity_manage_ids"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="ro.dsgmedia.cox.nfcoffee.MainActivity" />
         </activity>
 
-        <activity android:name=".NFCReadCard">
+        <activity android:name=".NFCReadCard"
+            android:parentActivityName=".ManageIDs"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="ro.dsgmedia.cox.nfcoffee.ManageIDs" />
         </activity>
 
-        <activity android:name=".EditID">
+        <activity android:name=".EditID"
+            android:parentActivityName=".ManageIDs"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="ro.dsgmedia.cox.nfcoffee.ManageIDs" />
         </activity>
 
-        <activity android:name=".PreferencesActivity">
+        <activity android:name=".PreferencesActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="ro.dsgmedia.cox.nfcoffee.ManageIDs" />
