@@ -59,16 +59,19 @@ public class ManageIDs extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        FloatingActionButton fabDELC = (FloatingActionButton) findViewById(R.id.NFCClearCounters);
         FloatingActionButton fabRNID = (FloatingActionButton) findViewById(R.id.NFCReadNewID);
         FloatingActionButton fabEXID = (FloatingActionButton) findViewById(R.id.NFCExportIDs);
         FloatingActionButton fabIMID = (FloatingActionButton) findViewById(R.id.NFCImportIDs);
         fabMAIN = (FloatingActionMenu) findViewById(R.id.openOptionsIDs);
 
-        fabRNID.setOnClickListener(new View.OnClickListener() {
+        fabDELC.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent ReadNFCIntent = new Intent(ManageIDs.this, NFCReadCard.class);
-                startActivity(ReadNFCIntent);
+                // Delete counters
+                // Will be done latter.
+                Toast.makeText(ManageIDs.this, "Deleting all counters, TBD!", Toast.LENGTH_SHORT).show();
+                fabMAIN.close(true);
             }
         });
 
@@ -104,6 +107,15 @@ public class ManageIDs extends AppCompatActivity {
                     return;
                 }
                 Toast.makeText(ManageIDs.this, "Storage available for reading.", Toast.LENGTH_SHORT).show();
+                fabMAIN.close(true);
+            }
+        });
+
+        fabRNID.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent ReadNFCIntent = new Intent(ManageIDs.this, NFCReadCard.class);
+                startActivity(ReadNFCIntent);
             }
         });
 
