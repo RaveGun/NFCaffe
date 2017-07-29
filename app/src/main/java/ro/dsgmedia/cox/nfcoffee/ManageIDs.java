@@ -1,5 +1,6 @@
 package ro.dsgmedia.cox.nfcoffee;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -70,7 +71,12 @@ public class ManageIDs extends AppCompatActivity {
             public void onClick(View v) {
                 // Delete counters
                 // Will be done latter.
-                Toast.makeText(ManageIDs.this, "Deleting all counters, TBD!", Toast.LENGTH_SHORT).show();
+                if(true == clearAllCounters()) {
+                    updateListView();
+                    Toast.makeText(ManageIDs.this, "All counters were cleared!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(ManageIDs.this, "UNKNOWN ERROR!!!", Toast.LENGTH_SHORT).show();
+                }
                 fabMAIN.close(true);
             }
         });
@@ -252,6 +258,16 @@ public class ManageIDs extends AppCompatActivity {
             return true;
         }
         return false;
+    }
+
+    private boolean clearAllCounters() {
+        ContentValues data=new ContentValues();
+        data.put(SqlHelper_NFCIDs.NB_COFFEES, 0);
+        if(0 != mydatabase.update(SqlHelper_NFCIDs.TABLE_NAME, data, null, null)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public boolean exportDataToDocumentsStorageDir(String fileName) {

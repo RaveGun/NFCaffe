@@ -1,5 +1,6 @@
 package ro.dsgmedia.cox.nfcoffee;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -43,12 +44,19 @@ public class EditID extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                mydatabase.execSQL("INSERT OR REPLACE INTO "+SqlHelper_NFCIDs.TABLE_NAME+" VALUES (\""+
-                        etCardID.getText() + "\",\"" +
-                        etCodeName.getText() + "\",\"" +
-                        etName.getText() + "\",\"" +
-                        etEMAil.getText() + "\",\"" +
-                        etCoffees.getText() + "\");");
+                ContentValues data=new ContentValues();
+                data.put(SqlHelper_NFCIDs.NFC_ID,       String.valueOf(etCardID.getText()));
+                data.put(SqlHelper_NFCIDs.CODE_NAME,    String.valueOf(etCodeName.getText()));
+                data.put(SqlHelper_NFCIDs.USER_NAME,    String.valueOf(etName.getText()));
+                data.put(SqlHelper_NFCIDs.USER_EMAIL,   String.valueOf(etEMAil.getText()));
+                data.put(SqlHelper_NFCIDs.NB_COFFEES,   String.valueOf(etCoffees.getText()));
+
+                if(0 == mydatabase.update(SqlHelper_NFCIDs.TABLE_NAME, data, SqlHelper_NFCIDs.CODE_NAME+"=\""+etCodeName.getText()+"\"", null )) {
+                    mydatabase.beginTransaction();
+                    mydatabase.insert(SqlHelper_NFCIDs.TABLE_NAME, null, data);
+                    mydatabase.setTransactionSuccessful();
+                    mydatabase.endTransaction();
+                }
 
                 finish();
 
