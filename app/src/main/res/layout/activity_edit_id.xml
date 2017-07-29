@@ -51,10 +51,11 @@
         android:id="@+id/editID_etName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:digits="ÄÖÜẞQWERTZUIOPASDFGHJKLYXCVBNM äöüßqwertzuiopasdfghjklyxcvbnm"
         android:ems="10"
         android:inputType="textPersonName"
-        android:selectAllOnFocus="true"
-        android:maxLines="1" />
+        android:maxLines="1"
+        android:selectAllOnFocus="true" />
 
     <TextView
         android:id="@+id/editID_tvEmail"
@@ -67,6 +68,7 @@
         android:id="@+id/editID_etEmail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:digits="QWERTZUIOPASDFGHJKLYXCVBNM qwertzuiopasdfghjklyxcvbnm1234567890_@."
         android:ems="10"
         android:inputType="textEmailAddress"
         android:maxLines="1"
