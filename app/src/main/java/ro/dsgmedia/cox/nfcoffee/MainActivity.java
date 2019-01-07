@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.nfc.tech.IsoDep;
@@ -124,7 +125,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mCurrentStatus = (TextView) findViewById(R.id.mCurrentStatus);
         mCurrentStatus.setMovementMethod(new ScrollingMovementMethod());
-        mCurrentStatus.setText("Please disable DATA connection!");
+        mCurrentStatus.setText("Please disable DATA connection!\n" +
+                "DO NOT FORGET to erase the counters!");
 
         // Setup listeners for the two buttons
         buttonGetTCP = (ImageButton) findViewById(R.id.getTcpData);
@@ -321,8 +323,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 for (Map.Entry<String,String> entry: ReceivedData.entrySet()) {
                     String codeName = entry.getKey();
                     String value = entry.getValue();
-                    data.put(SqlHelper_NFCIDs.NB_COFFEES, Integer.valueOf(value));
                     String NFCID = RevertBase36(codeName);
+
+                    int Coffees = 0;
+
+                    /* always read back the number of coffees stored on the phone */
+                    Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM "+SqlHelper_NFCIDs.TABLE_NAME+" WHERE CODENAME='" + codeName + "';", null);
+                    if (0 != rawQuerry.getCount()) {
+                        /* if the name exist read the value
+                        otherwise it will be added automatically later */
+                        rawQuerry.moveToFirst();
+                        Coffees = rawQuerry.getInt(4);
+                    }
+                    rawQuerry.close();
+
+                    /* add the number of coffees from the NFC reader */
+                    Coffees += Integer.valueOf(value);
+
+                    /* update the data with the new value */
+                    data.put(SqlHelper_NFCIDs.NB_COFFEES, Coffees);
 
                     if(0 == mydatabase.update(SqlHelper_NFCIDs.TABLE_NAME, data, SqlHelper_NFCIDs.CODE_NAME+"=\""+codeName+"\"", null )) {
                         mydatabase.beginTransaction();
