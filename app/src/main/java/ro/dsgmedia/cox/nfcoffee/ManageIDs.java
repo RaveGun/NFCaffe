@@ -90,9 +90,9 @@ public class ManageIDs extends AppCompatActivity {
                     return;
                 }
                 Calendar c = Calendar.getInstance();
-                String cYear = String.valueOf(c.get(Calendar.YEAR));
-                String cMonth = String.valueOf(c.get(Calendar.MONTH));
-                String cDay = String.valueOf(c.get(Calendar.DAY_OF_MONTH));
+                String cYear = String.format("%04d",c.get(Calendar.YEAR));
+                String cMonth = String.format("%02d", 1 + c.get(Calendar.MONTH));
+                String cDay = String.format("%02d",c.get(Calendar.DAY_OF_MONTH));
                 String fName = "export_"+cYear+cMonth+cDay+".csv";
                 if(true == exportDataToDocumentsStorageDir(fName)) {
                     Toast.makeText(ManageIDs.this, fName+" has been saved.", Toast.LENGTH_SHORT).show();
