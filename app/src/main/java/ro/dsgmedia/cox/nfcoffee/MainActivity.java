@@ -134,15 +134,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
                 // detect the view that was "clicked"
-                switch (view.getId()) {
-                    case R.id.getTcpData:
-                        if (mTcpClient == null) {
-                            buttonGetTCP.setPressed(true);
-                            mCurrentStatus.setText("");
-                            new ConnectTask().execute("");
-                        }
-                        //mTcpClient = null;
-                        break;
+                int v = view.getId();
+                if (v == R.id.getTcpData) {
+                    if (mTcpClient == null) {
+                        buttonGetTCP.setPressed(true);
+                        mCurrentStatus.setText("");
+                        new ConnectTask().execute("");
+                    }
                 }
             }
         });
@@ -171,23 +169,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
-        switch (item.getItemId()) {
-            case R.id.navigation_item_settings: {
-                // open activity setup WiFi
-                //Intent WiFiSetupIntent = new Intent(this, wlanActivity.class);
-                //startActivity(WiFiSetupIntent);
+        int i = item.getItemId();
 
-                Intent i = new Intent(this, PreferencesActivity.class);
-                startActivity(i);
+        if (i == R.id.navigation_item_settings) {
+            // open activity setup WiFi
+            //Intent WiFiSetupIntent = new Intent(this, wlanActivity.class);
+            //startActivity(WiFiSetupIntent);
 
-                break;
-            }
-            case R.id.navigation_item_manIDs: {
-                // open manage IDs activity
-                Intent ManageIDsIntent = new Intent(this, ManageIDs.class);
-                startActivity(ManageIDsIntent);
-                break;
-            }
+            Intent in = new Intent(this, PreferencesActivity.class);
+            startActivity(in);
+
+        } else if (i == R.id.navigation_item_manIDs) {
+            // open manage IDs activity
+            Intent ManageIDsIntent = new Intent(this, ManageIDs.class);
+            startActivity(ManageIDsIntent);
+
         }
         //close navigation drawer
         mDrawerLayout.closeDrawer(GravityCompat.START);

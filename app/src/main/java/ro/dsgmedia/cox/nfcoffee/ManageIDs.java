@@ -185,21 +185,18 @@ public class ManageIDs extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.manageids_delete:
-                if(-1 != toDeleteItemPosition) {
-                    String uName = ((Map.Entry)((java.util.HashMap)mList.getItemAtPosition(toDeleteItemPosition)).entrySet().toArray()[0]).getValue().toString();
-                    String whereClause = SqlHelper_NFCIDs.CODE_NAME + " ='" + uName + "'";
-                    Toast.makeText(ManageIDs.this, uName + " deleted!", Toast.LENGTH_SHORT).show();
-                    mydatabase.delete(SqlHelper_NFCIDs.TABLE_NAME, whereClause, null);
-                    mDeleteID.setVisible(false);
-                    toDeleteItemPosition = -1;
-                    updateListView();
-                }
-                break;
+        int i = item.getItemId();
 
-            default:
-                break;
+        if(i == R.id.manageids_delete) {
+            if(-1 != toDeleteItemPosition) {
+                String uName = ((Map.Entry)((java.util.HashMap)mList.getItemAtPosition(toDeleteItemPosition)).entrySet().toArray()[0]).getValue().toString();
+                String whereClause = SqlHelper_NFCIDs.CODE_NAME + " ='" + uName + "'";
+                Toast.makeText(ManageIDs.this, uName + " deleted!", Toast.LENGTH_SHORT).show();
+                mydatabase.delete(SqlHelper_NFCIDs.TABLE_NAME, whereClause, null);
+                mDeleteID.setVisible(false);
+                toDeleteItemPosition = -1;
+                updateListView();
+            }
         }
         return true;
     }

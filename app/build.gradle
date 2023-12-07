@@ -4,18 +4,19 @@ android {
     signingConfigs {
         debug_release {
             keyPassword 'Imb2kill++'
-            storeFile file('E:/Elec/Esp8266/_Projects/NFCaffe/nfcoffee_key.jks')
+            storeFile file('/home/cox/Development/nfcoffee_key.jks')
             storePassword 'Imb2kill++'
             keyAlias 'key0'
         }
     }
-    compileSdkVersion 25
+    compileSdkVersion 33
+    namespace "ro.dsgmedia.cox.nfcoffee"
     defaultConfig {
         applicationId "ro.dsgmedia.cox.nfcoffee"
         minSdkVersion 22
-        targetSdkVersion 26
-        versionCode 4
-        versionName "3.1"
+        targetSdkVersion 33
+        versionCode 5
+        versionName "5.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
