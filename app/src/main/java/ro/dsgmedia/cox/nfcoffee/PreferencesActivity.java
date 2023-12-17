@@ -3,6 +3,7 @@ package ro.dsgmedia.cox.nfcoffee;
 /**
  * Created by COX on 29-Jun-17.
  */
+
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,6 +19,7 @@ import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -35,23 +37,41 @@ public class PreferencesActivity extends PreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+
         mainWifiObj = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if (mainWifiObj.isWifiEnabled() == false)
-        {
+        if (mainWifiObj.isWifiEnabled() == false) {
             Toast.makeText(getApplicationContext(), "wifi is disabled..making it enabled", Toast.LENGTH_LONG).show();
             mainWifiObj.setWifiEnabled(true);
         }
 
-        registerReceiver(BcastRx = new BroadcastReceiver()
-        {
+        registerReceiver(BcastRx = new BroadcastReceiver() {
             @Override
-            public void onReceive(Context c, Intent intent)
-            {
+            public void onReceive(Context c, Intent intent) {
                 Log.w("SSIDs found ", "OK");
 
                 //setContentView(R.layout.activity_wlan_activty);
                 // update here the array list
 
+                if (ActivityCompat.checkSelfPermission(c, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
                 List<ScanResult> wifiScanList = mainWifiObj.getScanResults();
                 wifis = new ArrayList<>();
                 for (int i = 0; i < wifiScanList.size(); i++) {
