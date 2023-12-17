@@ -81,7 +81,7 @@ public class getTCPData {
             //here you must put your computer's IP address.
             InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
 
-            Log.i("TCP Client", "C: Connecting to ... " + serverAddr);
+            Log.i("[NFCaffee]", "TCP Client C: Connecting to ... " + serverAddr);
 
             //create a socket to make the connection with the server
             Socket socket = null;
@@ -133,19 +133,19 @@ public class getTCPData {
                     }
                 }
             } catch (Exception e) {
-                Log.w("TCP", "S: Error", e);
+                Log.w("[NFCaffee]", "TCP S: Error", e);
                 mRun = false;
             } finally {
                 //the socket must be closed. It is not possible to reconnect to this socket
                 // after it is closed, which means a new socket instance has to be created.
                 if (socket != null) {
                     socket.close();
-                    Log.w("TCP : ", "OVER");
+                    Log.w("[NFCaffee]", "TCP OVER");
                     mRun = false;
                 }
             }
         } catch (Exception e) {
-            Log.e("TCP", "C: Error", e);
+            Log.e("[NFCaffee]", "TCP C: Error", e);
         }
     }
 
