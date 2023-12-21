@@ -5,13 +5,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Parcelable;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,29 +17,27 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.documentfile.provider.DocumentFile;
+
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+
 public class ManageIDs extends AppCompatActivity {
 
     private ListView mList;
     private MenuItem mDeleteID;
-    private LinkedHashMap<String, String> nameNFCID = new LinkedHashMap<>();;
+    private LinkedHashMap<String, String> nameNFCID = new LinkedHashMap<>();
+    ;
     private int toDeleteItemPosition;
     FloatingActionMenu fabMAIN;
 
@@ -71,7 +64,7 @@ public class ManageIDs extends AppCompatActivity {
             public void onClick(View v) {
                 // Delete counters
                 // Will be done latter.
-                if(true == clearAllCounters()) {
+                if (true == clearAllCounters()) {
                     updateListView();
                     Toast.makeText(ManageIDs.this, "All counters were cleared!", Toast.LENGTH_SHORT).show();
                 } else {
@@ -84,21 +77,13 @@ public class ManageIDs extends AppCompatActivity {
         fabEXID.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Export here the IDs to Download folder
-                if(false == isExternalStorageWritable()) {
-                    Toast.makeText(ManageIDs.this, "External storage not available!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                Calendar c = Calendar.getInstance();
-                String cYear = String.format("%04d",c.get(Calendar.YEAR));
-                String cMonth = String.format("%02d", 1 + c.get(Calendar.MONTH));
-                String cDay = String.format("%02d",c.get(Calendar.DAY_OF_MONTH));
-                String fName = "export_"+cYear+cMonth+cDay+".csv";
-                if(true == exportDataToDocumentsStorageDir(fName)) {
-                    Toast.makeText(ManageIDs.this, fName+" has been saved.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(ManageIDs.this, "UNKNOWN ERROR!!!", Toast.LENGTH_SHORT).show();
-                }
+                // Start the edit window to be able to copy and or paste data into the app from the files.
+                Intent shareDate = new Intent(ManageIDs.this, ShareData.class);
+                Bundle action = new Bundle();
+                action.putInt("action", 1);
+                shareDate.putExtras(action);
+                startActivity(shareDate);
+                // Close the menu
                 fabMAIN.close(true);
             }
         });
@@ -107,12 +92,24 @@ public class ManageIDs extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Import here the IDs to Download folder
+                /*
                 // Will be done latter.
-                if(false == isExternalStorageReadable()) {
+                // Probably not need as it does not work the edit screen will be used
+                if (false == isExternalStorageReadable()) {
                     Toast.makeText(ManageIDs.this, "External storage not available!", Toast.LENGTH_SHORT).show();
                     return;
+                } else {
+                    Toast.makeText(ManageIDs.this, "Storage available for reading.", Toast.LENGTH_SHORT).show();
                 }
-                Toast.makeText(ManageIDs.this, "Storage available for reading.", Toast.LENGTH_SHORT).show();
+                */
+
+                // Start the edit window to be able to copy and or paste data into the app from the files.
+                Intent shareDate = new Intent(ManageIDs.this, ShareData.class);
+                Bundle action = new Bundle();
+                action.putInt("action", 2);
+                shareDate.putExtras(action);
+                startActivity(shareDate);
+                // Close the menu
                 fabMAIN.close(true);
             }
         });
@@ -124,9 +121,9 @@ public class ManageIDs extends AppCompatActivity {
                 startActivity(ReadNFCIntent);
             }
         });
-
         mList = (ListView) findViewById(R.id.listOfIDs);
     }
+
 
     @Override
     protected void onResume() {
@@ -187,9 +184,9 @@ public class ManageIDs extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int i = item.getItemId();
 
-        if(i == R.id.manageids_delete) {
-            if(-1 != toDeleteItemPosition) {
-                String uName = ((Map.Entry)((java.util.HashMap)mList.getItemAtPosition(toDeleteItemPosition)).entrySet().toArray()[0]).getValue().toString();
+        if (i == R.id.manageids_delete) {
+            if (-1 != toDeleteItemPosition) {
+                String uName = ((Map.Entry) ((java.util.HashMap) mList.getItemAtPosition(toDeleteItemPosition)).entrySet().toArray()[0]).getValue().toString();
                 String whereClause = SqlHelper_NFCIDs.CODE_NAME + " ='" + uName + "'";
                 Toast.makeText(ManageIDs.this, uName + " deleted!", Toast.LENGTH_SHORT).show();
                 mydatabase.delete(SqlHelper_NFCIDs.TABLE_NAME, whereClause, null);
@@ -210,8 +207,7 @@ public class ManageIDs extends AppCompatActivity {
         Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM " + SqlHelper_NFCIDs.TABLE_NAME + " ORDER BY " + SqlHelper_NFCIDs.USER_NAME + " ASC;", null);
         rawQuerry.moveToFirst();
 
-        for(int i = 0; i < rawQuerry.getCount(); i++)
-        {
+        for (int i = 0; i < rawQuerry.getCount(); i++) {
             String NFCIDString = rawQuerry.getString(0);
             String CodeNameString = rawQuerry.getString(1);
             String UserName = rawQuerry.getString(2);
@@ -228,9 +224,9 @@ public class ManageIDs extends AppCompatActivity {
                 new String[]{"First Line", "Second Line"},
                 new int[]{R.id.list_item_text_view, R.id.list_item_subtext_view});
         Iterator it = nameNFCID.entrySet().iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             HashMap<String, String> resultsMap = new HashMap<>();
-            Map.Entry pair = (Map.Entry)it.next();
+            Map.Entry pair = (Map.Entry) it.next();
             resultsMap.put("First Line", pair.getValue().toString());
             resultsMap.put("Second Line", pair.getKey().toString());
             listHItems.add(resultsMap);
@@ -238,80 +234,52 @@ public class ManageIDs extends AppCompatActivity {
         mList.setAdapter(adapter);
     }
 
-    /* Checks if external storage is available for read and write */
-    public boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
-    }
-
-    /* Checks if external storage is available to at least read */
-    public boolean isExternalStorageReadable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state) ||
-                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            return true;
-        }
-        return false;
-    }
-
     private boolean clearAllCounters() {
-        ContentValues data=new ContentValues();
+        ContentValues data = new ContentValues();
         data.put(SqlHelper_NFCIDs.NB_COFFEES, 0);
-        if(0 != mydatabase.update(SqlHelper_NFCIDs.TABLE_NAME, data, null, null)) {
+        if (0 != mydatabase.update(SqlHelper_NFCIDs.TABLE_NAME, data, null, null)) {
             return true;
         } else {
             return false;
         }
     }
 
-    public boolean exportDataToDocumentsStorageDir(String fileName) {
-        // Get the directory for the user's public documents directory.
-        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-        File file = new File(path, fileName);
-        try {
-            path.mkdir();
-            OutputStream os = new FileOutputStream(file);
-            OutputStreamWriter osw = new OutputStreamWriter(os);
 
-            //Write header
-            osw.write("NFCID,CODENAME,UNAME,EMAIL,COFF\n");
+    private void openDocumentTree() {
+        DocumentFile rootDirectory = DocumentFile.fromTreeUri(this, Uri.parse("content://downloads/public_downloads"));
 
-            Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM " + SqlHelper_NFCIDs.TABLE_NAME + " ORDER BY " + SqlHelper_NFCIDs.USER_NAME + " ASC;", null);
-            rawQuerry.moveToFirst();
-            for(int i = 0; i < rawQuerry.getCount(); i++)
-            {
-                String NFCIDString = rawQuerry.getString(0);
-                String CodeNameString = rawQuerry.getString(1);
-                String UserName = rawQuerry.getString(2);
-                String Email = rawQuerry.getString(3);
-                String Coffees = String.valueOf(rawQuerry.getInt(4));
-                String csvLine = NFCIDString+","+CodeNameString+","+UserName+","+Email+","+Coffees+"\n";
-                osw.write(csvLine);
-                rawQuerry.moveToNext();
+        if (rootDirectory != null) {
+            if (rootDirectory.isDirectory()) {
+                // Request access to the root directory of the Downloads folder
+                //rootDirectory.requestPermissions(this, REQUEST_OPEN_TREE_FOR_READ_ACCESS);
+            } else {
+                // Handle the file as a regular file
             }
-            rawQuerry.close();
-            osw.flush();
-            osw.close();
-            os.flush();
-            os.close();
-
-            // Tell the media scanner about the new file so that it is
-            // immediately available to the user.
-            MediaScannerConnection.scanFile(this,
-                    new String[] { file.toString() }, null,
-                    new MediaScannerConnection.OnScanCompletedListener() {
-                        public void onScanCompleted(String path, Uri uri) {
-                            Log.i("STORAGE", "Scanned " + path + ":");
-                            Log.i("STORAGE", "-> uri=" + uri);
-                        }
-                    });
-            return true;
-        } catch (IOException e) {
-            Log.w("STORAGE", "Error writing " + file, e);
-            return false;
+        } else {
+            // Handle the error
         }
     }
+
+    /*
+    private void readFileFromDocumentTree() {
+        DocumentFile rootDirectory = DocumentFile.fromTreeUri(this, Uri.parse("content://downloads/public_downloads"));
+
+        if (rootDirectory != null) {
+            // Locate the file you want to read from the root directory
+            DocumentFile file = rootDirectory.findFile("my_file.txt");
+
+            if (file != null) {
+                try (InputStream inputStream = file.getContentResolver().openInputStream(file.getUri())) {
+                    // Read the file contents into a String
+                    String fileContent = readInputStream(inputStream);
+                    // Do something with the file content
+                    Log.d("MyApp", "File content: " + fileContent);
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+    */
+
 }
+

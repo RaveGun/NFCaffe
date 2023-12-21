@@ -2,13 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/navigation_item_settings"
-            android:checkable="false"
-            android:checked="true"
-            android:enabled="true"
-            android:title="@string/settings"
-            android:visible="true" />
-        <item
             android:id="@+id/navigation_item_manIDs"
             android:checkable="false"
             android:checked="true"
