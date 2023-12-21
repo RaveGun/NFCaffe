@@ -2,7 +2,6 @@ package ro.dsgmedia.cox.nfcoffee;
 
 import android.app.Activity;
 import android.content.ContentValues;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -14,7 +13,7 @@ import java.util.Map;
 
 public class TCPTransfer {
 
-    private static String RevertBase36(String inCodeName) {
+    public static String RevertBase36(String inCodeName) {
         String[] splited;
         splited = inCodeName.split("\\.");
         inCodeName = splited[0]+splited[1];
@@ -56,8 +55,7 @@ public class TCPTransfer {
 
         // start with the SQL database update
         ContentValues data=new ContentValues();
-        for (
-                Map.Entry<String,String> entry: ReceivedData.entrySet()) {
+        for (Map.Entry<String,String> entry: ReceivedData.entrySet()) {
             String codeName = entry.getKey();
             String value = entry.getValue();
             String NFCID = RevertBase36(codeName);

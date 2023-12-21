@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:baselineAligned="false"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/exportData"
+        android:layout_width="409dp"
+        android:layout_height="640dp"
+        android:autofillHints=""
+        android:inputType="textMultiLine"
+        android:textAlignment="viewStart"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:prefixText="NFCID,CODENAME,UNAME,EMAIL,COFF\n"
+        tools:ignore="LabelFor,SpeakableTextPresentCheck" />
+
+    <Button
+        android:id="@+id/pasteData"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:background="@color/design_default_color_background"
+        android:text="@string/paste"
+        android:onClick="btnPastePressed"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="#3F51B5"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/copyData"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/exportData" />
+
+    <Button
+        android:id="@+id/copyData"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:background="@color/design_default_color_background"
+        android:text="Copy"
+        android:onClick="btnCopyPressed"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="#3F51B5"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/saveData"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/pasteData"
+        app:layout_constraintTop_toBottomOf="@+id/exportData"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/saveData"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:background="@color/design_default_color_background"
+        android:text="@string/save"
+        android:onClick="btnSavePressed"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="#3F51B5"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/closeNoSave"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/copyData"
+        app:layout_constraintTop_toBottomOf="@+id/exportData" />
+
+    <Button
+        android:id="@+id/closeNoSave"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:background="@color/design_default_color_background"
+        android:text="@string/close"
+        android:onClick="btnClosePressed"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="#3F51B5"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/saveData"
+        app:layout_constraintTop_toBottomOf="@+id/exportData" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

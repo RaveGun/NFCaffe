@@ -9,15 +9,15 @@ android {
             keyAlias 'key0'
         }
     }
-    compileSdkVersion 33
     namespace "ro.dsgmedia.cox.nfcoffee"
     defaultConfig {
+        compileSdkVersion 33
         applicationId "ro.dsgmedia.cox.nfcoffee"
-        minSdkVersion 22
+        minSdkVersion 30
         targetSdkVersion 33
-        versionCode 5
-        versionName "5.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        versionCode 6
+        versionName "5.1"
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildTypes {
         release {
@@ -33,13 +33,18 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+    implementation 'androidx.preference:preference:1.2.1'
+    implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
+    implementation 'com.opencsv:opencsv:4.6'
+
+    api 'androidx.appcompat:appcompat:1.6.1'
+    api 'androidx.constraintlayout:constraintlayout:2.1.4'
+    api 'androidx.legacy:legacy-support-v4:1.0.0'
+    api 'com.google.android.material:material:1.8.0'
+    api 'com.github.clans:fab:1.6.4'
+
+    androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    api 'com.android.support:appcompat-v7:25.3.1'
-    api 'com.android.support:design:25.3.1'
-    api 'com.android.support.constraint:constraint-layout:1.0.2'
-    api 'com.android.support:support-v4:25.3.1'
     testImplementation 'junit:junit:4.12'
-    api 'com.github.clans:fab:1.6.4'
 }

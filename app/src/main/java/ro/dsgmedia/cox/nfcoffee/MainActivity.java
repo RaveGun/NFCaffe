@@ -4,55 +4,57 @@ package ro.dsgmedia.cox.nfcoffee;
  * Created by COX on 24-May-17.
  */
 
-import static android.net.wifi.WifiManager.STATUS_NETWORK_SUGGESTIONS_SUCCESS;
-
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.preference.PreferenceManager;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.database.sqlite.*;
 import android.widget.ImageButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.google.android.material.navigation.NavigationView;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import ro.dsgmedia.cox.nfcoffee.WifiConnect;
-import ro.dsgmedia.cox.nfcoffee.TCPTransfer;
-
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    private int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 0x3141;
-    private int PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 0x3142;
+    private final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 0x3141;
+    private final int PERMISSIONS_REQUEST_CODE_READ_EXTERNAL_STORAGE = 0x3142;
+    private final int PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 0x3143;
+    private final int REQUEST_MANAGE_DOCUMENTS = 0x3144;
+    private final int REQUEST_OPEN_TREE_FOR_READ_ACCESS = 0x3145;
 
 
     private DrawerLayout mDrawerLayout;
-    private ActionBarDrawerToggle mActionBarDrawerToggle;
-    private NavigationView mOptionsView;
     private TextView mCurrentStatus;
     private ImageButton buttonGetTCP;
     private ScrollView mScrollView;
 
-    private SQLiteOpenHelper dbHelper;
     private SQLiteDatabase mydatabase;
 
     Context context = this;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,25 +66,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         }
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE);
-            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-        }
-
-        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        dbHelper = new SqlHelper_NFCIDs(this);
+        SQLiteOpenHelper dbHelper = new SqlHelper_NFCIDs(this);
         mydatabase = dbHelper.getWritableDatabase();
 
         // Code here will be triggered once the drawer closes as we don't want anything to happen so we leave this blank
-        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        ActionBarDrawerToggle mActionBarDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
         // Setup the listener for the navigation drawer
-        mOptionsView = (NavigationView) findViewById(R.id.navigation_drawer);
+        NavigationView mOptionsView = (NavigationView) findViewById(R.id.navigation_drawer);
         mOptionsView.setNavigationItemSelectedListener(this);
 
         //calling sync state is necessary or else your hamburger icon wont show up
@@ -90,8 +85,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mCurrentStatus = (TextView) findViewById(R.id.mCurrentStatus);
         mCurrentStatus.setMovementMethod(new ScrollingMovementMethod());
-        mCurrentStatus.setText("Please disable DATA connection!\n" +
-                "DO NOT FORGET to erase the counters!");
+        mCurrentStatus.setText("DO NOT FORGET to ERASE the counters!");
 
         // Setup listeners for the two buttons
         buttonGetTCP = (ImageButton) findViewById(R.id.getTcpData);
@@ -103,9 +97,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (v == R.id.getTcpData) {
                     buttonGetTCP.setPressed(true);
                     mCurrentStatus.setText("");
-                    //new ConnectTask().execute("");
+
+                    /* use the hand written TaskRunner class to start the ConnectTask callable class */
                     TaskRunner taskRunner = new TaskRunner();
-                    taskRunner.executeAsync(new ConnectTask(""), (data) -> {
+                    taskRunner.executeAsync(new ConnectTask(), (data) -> {
                         // MyActivity activity = activityReference.get();
                         // activity.progressBar.setVisibility(View.GONE);
                         // populateData(activity, data) ;
@@ -146,19 +141,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Handle navigation view item clicks here.
         int i = item.getItemId();
 
-        if (i == R.id.navigation_item_settings) {
-            // open activity setup WiFi
-            //Intent WiFiSetupIntent = new Intent(this, wlanActivity.class);
-            //startActivity(WiFiSetupIntent);
-
-            Intent in = new Intent(this, PreferencesActivity.class);
-            startActivity(in);
-
+        if (i == R.id.navigation_item_help) {
+            // there is no help implemented
+            Toast.makeText(getApplicationContext(), "Help is not available now.", Toast.LENGTH_LONG).show();
         } else if (i == R.id.navigation_item_manIDs) {
             // open manage IDs activity
             Intent ManageIDsIntent = new Intent(this, ManageIDs.class);
             startActivity(ManageIDsIntent);
-
         }
         //close navigation drawer
         mDrawerLayout.closeDrawer(GravityCompat.START);
@@ -166,16 +155,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        // granted permission for WiFi
+        // all good
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_MANAGE_DOCUMENTS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, proceed with reading the file
+                // call openDocumentTree(); but not from here
+            } else {
+                // Permission denied, handle appropriately
+                Log.d("MyApp", "Permission denied to manage documents");
+            }
+        } else if (requestCode == REQUEST_OPEN_TREE_FOR_READ_ACCESS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, read the file from the DocumentTree
+                // call readFileFromDocumentTree(); but not from here
+            } else {
+                // Permission denied, handle appropriately
+                Log.d("MyApp", "Permission denied to read documents");
+            }
+        }
         if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            // granted permission for WiFi
-            // all good
+            Log.i("[NFCaffee]", "COARSE_LOCATION - Granted");
+        }
+        if (requestCode == PERMISSIONS_REQUEST_CODE_READ_EXTERNAL_STORAGE
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Log.i("[NFCaffee]", "READ_EXTERNAL_STORAGE - Granted");
         }
         if (requestCode == PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            // granted permission for WiFi
-            // all good
+            Log.i("[NFCaffee]", "WRITE_EXTERNAL_STORAGE - Granted");
         }
     }
 
@@ -203,24 +214,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    /* This is a Callable class
+    * @Name: ConnectTask
+    * @ReturnType: getTCPData - this is the class from getTCPData.java
+    * */
+    public class ConnectTask implements Callable<getTCPData> {
+        //private final String input;
 
-    //public class ConnectTask extends AsyncTask<String, String, getTCPData> {
-    class ConnectTask implements Callable<getTCPData> {
-        private final String input;
-        public ConnectTask(String input) {
+        /*public ConnectTask(String input) {
             this.input = input;
-        }
+        }*/
 
-
-        //protected getTCPData doInBackground(String... message) {
         @Override
         public getTCPData call() throws Exception {
-            /* Call here connect to the wifi and then get tcp*/
-
+            // Call here connect to the wifi and then get tcp
             if(true == WifiConnect.connectWifi((Activity) context)) {
                 TCPTransfer.tcpTransfer((Activity)context, mydatabase);
             }
-
             return null;
         }
 
