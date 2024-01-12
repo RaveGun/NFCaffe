@@ -40,10 +40,11 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 0x3141;
-    private final int PERMISSIONS_REQUEST_CODE_READ_EXTERNAL_STORAGE = 0x3142;
-    private final int PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 0x3143;
-    private final int REQUEST_MANAGE_DOCUMENTS = 0x3144;
-    private final int REQUEST_OPEN_TREE_FOR_READ_ACCESS = 0x3145;
+    private final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION = 0x3142;
+    private final int PERMISSIONS_REQUEST_CODE_READ_EXTERNAL_STORAGE = 0x3143;
+    private final int PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 0x3144;
+    private final int REQUEST_MANAGE_DOCUMENTS = 0x3145;
+    private final int REQUEST_OPEN_TREE_FOR_READ_ACCESS = 0x3146;
 
 
     private DrawerLayout mDrawerLayout;
@@ -60,9 +61,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+        /*
+        if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION);
+            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+        }
+        */
+        if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         }
 
@@ -228,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         public getTCPData call() throws Exception {
             // Call here connect to the wifi and then get tcp
-            if(true == WifiConnect.connectWifi((Activity) context)) {
+            if(Boolean.TRUE.equals(WifiConnect.connectWifi((Activity) context))) {
                 TCPTransfer.tcpTransfer((Activity)context, mydatabase);
             }
             return null;
