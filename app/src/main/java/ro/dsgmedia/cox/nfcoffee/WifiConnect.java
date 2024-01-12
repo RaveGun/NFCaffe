@@ -35,6 +35,7 @@ public class WifiConnect {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(a);
         String ssid = sharedPref.getString("wifiNFCSSID", "NoWiFi");
         String key = sharedPref.getString("wifiNFCPWD", "nofreecoffee");
+        ssid = "NFCoffee";
 
         // check wifi status
         mainWifiObj = (WifiManager) a.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -85,7 +86,7 @@ public class WifiConnect {
                 wifiInfo = mainWifiObj.getConnectionInfo();
                 timeout--;
                 try {
-                    Log.w("[NFCaffee]", "Waiting "+String.valueOf(timeout));
+                    Log.w("[NFCaffee]", "Waiting "+String.valueOf(timeout) + wifiInfo.getSSID());
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
