@@ -46,6 +46,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private SQLiteDatabase mydatabase;
 
+    /**
+     * A transfer keeps running on its executor even if the activity is
+     * recreated (rotation is allowed now). The flag keeps the button disabled
+     * for the new instance so a second transfer cannot add the counters twice.
+     */
+    private static volatile boolean sTransferRunning = false;
+
     Context context = this;
 
     @Override
@@ -80,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Setup listeners for the two buttons
         buttonGetTCP = (ImageButton) findViewById(R.id.getTcpData);
+        buttonGetTCP.setEnabled(!sTransferRunning);
         buttonGetTCP.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -90,11 +98,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     // Prevent a second transfer from being started while this one runs,
                     // otherwise the counters would be added twice.
                     buttonGetTCP.setEnabled(false);
+                    sTransferRunning = true;
                     mCurrentStatus.setText("");
 
                     /* use the hand written TaskRunner class to start the ConnectTask callable class */
                     TaskRunner taskRunner = new TaskRunner();
                     taskRunner.executeAsync(new ConnectTask(), (data) -> {
+                        sTransferRunning = false;
                         buttonGetTCP.setPressed(false);
                         buttonGetTCP.setEnabled(true);
                     });
