@@ -4,8 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:layout_height="match_parent">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
@@ -60,16 +59,16 @@
                         <TextView
                             android:id="@+id/mCurrentStatus"
                             android:layout_width="match_parent"
-                            android:layout_height="64dp"
+                            android:layout_height="wrap_content"
                             android:layout_marginTop="32dp"
-                            android:layout_weight="1"
                             android:background="@android:color/transparent"
-                            android:enabled="false"
-                            android:inputType="textMultiLine"
+                            android:minHeight="64dp"
+                            android:paddingHorizontal="16dp"
                             android:requiresFadingEdge="vertical"
                             android:scrollbars="vertical"
-                            android:textAlignment="center"
-                            android:textColor="@android:color/black" />
+                            android:textAlignment="viewStart"
+                            android:textColor="@android:color/black"
+                            android:textSize="14sp" />
                     </LinearLayout>
                 </ScrollView>
 

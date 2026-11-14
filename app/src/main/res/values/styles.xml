@@ -14,8 +14,7 @@
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- statusBar/navigationBar colours are handled by EdgeToEdge (API 35+ ignores them) -->
     </style>
 
     <!-- This will be used to set the theme for AppBarLayout from activity_main.xml -->

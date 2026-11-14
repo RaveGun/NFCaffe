@@ -4,10 +4,6 @@ package ro.dsgmedia.cox.nfcoffee;
  * Created by COX on 31-May-17.
  */
 
-import android.app.Activity;
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.util.Log;
 import java.io.*;
 import java.net.InetAddress;

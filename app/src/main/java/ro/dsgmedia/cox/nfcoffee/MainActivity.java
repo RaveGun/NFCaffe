@@ -4,14 +4,11 @@ package ro.dsgmedia.cox.nfcoffee;
  * Created by COX on 24-May-17.
  */
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,7 +21,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
+import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -39,38 +37,24 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    private final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 0x3141;
-    private final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION = 0x3142;
-    private final int PERMISSIONS_REQUEST_CODE_READ_EXTERNAL_STORAGE = 0x3143;
-    private final int PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 0x3144;
-    private final int REQUEST_MANAGE_DOCUMENTS = 0x3145;
-    private final int REQUEST_OPEN_TREE_FOR_READ_ACCESS = 0x3146;
-
-
     private DrawerLayout mDrawerLayout;
     private TextView mCurrentStatus;
     private ImageButton buttonGetTCP;
     private ScrollView mScrollView;
 
+    private final Handler uiHandler = new Handler(Looper.getMainLooper());
+
     private SQLiteDatabase mydatabase;
 
     Context context = this;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Edge-to-edge is enforced for apps targeting API 35+; handle the insets ourselves.
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        /*
-        if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION);
-            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-        }
-        */
-        if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION);
-            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-        }
+        WindowInsetsUtil.applySystemBarInsets(this, findViewById(android.R.id.content));
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -92,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mCurrentStatus = (TextView) findViewById(R.id.mCurrentStatus);
         mCurrentStatus.setMovementMethod(new ScrollingMovementMethod());
         mCurrentStatus.setText("DO NOT FORGET to ERASE the counters!");
+        mScrollView = (ScrollView) findViewById(R.id.mScroll);
 
         // Setup listeners for the two buttons
         buttonGetTCP = (ImageButton) findViewById(R.id.getTcpData);
@@ -102,44 +87,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 int v = view.getId();
                 if (v == R.id.getTcpData) {
                     buttonGetTCP.setPressed(true);
+                    // Prevent a second transfer from being started while this one runs,
+                    // otherwise the counters would be added twice.
+                    buttonGetTCP.setEnabled(false);
                     mCurrentStatus.setText("");
 
                     /* use the hand written TaskRunner class to start the ConnectTask callable class */
                     TaskRunner taskRunner = new TaskRunner();
                     taskRunner.executeAsync(new ConnectTask(), (data) -> {
-                        // MyActivity activity = activityReference.get();
-                        // activity.progressBar.setVisibility(View.GONE);
-                        // populateData(activity, data) ;
-
-                        //loadingLiveData.setValue(false);
-                        //dataLiveData.setValue(data);
-                        //mCurrentStatus.append((CharSequence) data);
+                        buttonGetTCP.setPressed(false);
+                        buttonGetTCP.setEnabled(true);
                     });
                 }
             }
         });
+
+        registerBackCallback();
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        /*
-        if(null != mTcpClient)
-        {
-            // disconnect if connected
-            mTcpClient.stopClient();
-            mTcpClient = null;
-        }
-        */
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
-            mDrawerLayout.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
+    /**
+     * Replaces the deprecated onBackPressed() override. Closing the drawer first is
+     * the only behaviour the app ever had, so this keeps it identical.
+     */
+    private void registerBackCallback() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    mDrawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
     }
 
     @Override
@@ -160,42 +141,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        // granted permission for WiFi
-        // all good
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_MANAGE_DOCUMENTS) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, proceed with reading the file
-                // call openDocumentTree(); but not from here
-            } else {
-                // Permission denied, handle appropriately
-                Log.d("MyApp", "Permission denied to manage documents");
+    /**
+     * Appends one progress line to the on-screen status box.
+     *
+     * <p>Called from the background worker and from ConnectivityManager callback
+     * threads, so it always hops to the main looper before touching views.</p>
+     */
+    private void appendStatus(String message) {
+        uiHandler.post(() -> {
+            if (isFinishing() || isDestroyed()) {
+                return;
             }
-        } else if (requestCode == REQUEST_OPEN_TREE_FOR_READ_ACCESS) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, read the file from the DocumentTree
-                // call readFileFromDocumentTree(); but not from here
-            } else {
-                // Permission denied, handle appropriately
-                Log.d("MyApp", "Permission denied to read documents");
+            mCurrentStatus.append(message);
+            mCurrentStatus.append("\n");
+            if (mScrollView != null) {
+                mScrollView.post(() -> mScrollView.fullScroll(View.FOCUS_DOWN));
             }
-        }
-        if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Log.i("[NFCaffee]", "COARSE_LOCATION - Granted");
-        }
-        if (requestCode == PERMISSIONS_REQUEST_CODE_READ_EXTERNAL_STORAGE
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Log.i("[NFCaffee]", "READ_EXTERNAL_STORAGE - Granted");
-        }
-        if (requestCode == PERMISSIONS_REQUEST_CODE_WRITE_EXTERNAL_STORAGE
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Log.i("[NFCaffee]", "WRITE_EXTERNAL_STORAGE - Granted");
-        }
+        });
     }
-
 
     public static class TaskRunner {
         private final Executor executor = Executors.newSingleThreadExecutor(); // change according to your requirements
@@ -207,15 +170,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         public <R> void executeAsync(Callable<R> callable, Callback<R> callback) {
             executor.execute(() -> {
-                final R result;
+                R result = null;
                 try {
                     result = callable.call();
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    // Never let a background failure crash the app.
+                    Log.e("[NFCaffee]", "Background task failed", e);
+                } finally {
+                    R finalResult = result;
+                    handler.post(() -> callback.onComplete(finalResult));
                 }
-                handler.post(() -> {
-                    callback.onComplete(result);
-                });
             });
         }
     }
@@ -225,31 +189,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     * @ReturnType: getTCPData - this is the class from getTCPData.java
     * */
     public class ConnectTask implements Callable<getTCPData> {
-        //private final String input;
-
-        /*public ConnectTask(String input) {
-            this.input = input;
-        }*/
-
         @Override
         public getTCPData call() throws Exception {
             // Call here connect to the wifi and then get tcp
-            if(Boolean.TRUE.equals(WifiConnect.connectWifi((Activity) context))) {
-                TCPTransfer.tcpTransfer((Activity)context, mydatabase);
+            try {
+                if (Boolean.TRUE.equals(WifiConnect.connectWifi((Activity) context, MainActivity.this::appendStatus))) {
+                    TCPTransfer.tcpTransfer((Activity) context, mydatabase, MainActivity.this::appendStatus);
+                } else {
+                    appendStatus("Transfer aborted.");
+                }
+            } finally {
+                // Always hand the process back to the normal network afterwards.
+                WifiConnect.disconnectWifi((Activity) context);
             }
             return null;
         }
-
-        /*
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            buttonGetTCP.setPressed(true);
-            if(values[0].contains("Finished"))
-                buttonGetTCP.setPressed(false);
-            mCurrentStatus.append(values[0]);
-            mCurrentStatus.append(System.getProperty("line.separator"));
-        }
-        */
     }
 }

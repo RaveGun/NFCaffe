@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -19,7 +18,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.documentfile.provider.DocumentFile;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -37,7 +35,6 @@ public class ManageIDs extends AppCompatActivity {
     private ListView mList;
     private MenuItem mDeleteID;
     private LinkedHashMap<String, String> nameNFCID = new LinkedHashMap<>();
-    ;
     private int toDeleteItemPosition;
     FloatingActionMenu fabMAIN;
 
@@ -49,6 +46,7 @@ public class ManageIDs extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manage_ids);
+        WindowInsetsUtil.applySystemBarInsets(this, findViewById(android.R.id.content));
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -63,7 +61,6 @@ public class ManageIDs extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Delete counters
-                // Will be done latter.
                 if (true == clearAllCounters()) {
                     updateListView();
                     Toast.makeText(ManageIDs.this, "All counters were cleared!", Toast.LENGTH_SHORT).show();
@@ -91,19 +88,7 @@ public class ManageIDs extends AppCompatActivity {
         fabIMID.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Import here the IDs to Download folder
-                /*
-                // Will be done latter.
-                // Probably not need as it does not work the edit screen will be used
-                if (false == isExternalStorageReadable()) {
-                    Toast.makeText(ManageIDs.this, "External storage not available!", Toast.LENGTH_SHORT).show();
-                    return;
-                } else {
-                    Toast.makeText(ManageIDs.this, "Storage available for reading.", Toast.LENGTH_SHORT).show();
-                }
-                */
-
-                // Start the edit window to be able to copy and or paste data into the app from the files.
+                // Import is done from the text box, so no storage permission is involved.
                 Intent shareDate = new Intent(ManageIDs.this, ShareData.class);
                 Bundle action = new Bundle();
                 action.putInt("action", 2);
@@ -139,8 +124,10 @@ public class ManageIDs extends AppCompatActivity {
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                mDeleteID.setVisible(false);
-                mList.setItemChecked(mList.getSelectedItemPosition(), false);
+                if (mDeleteID != null) {
+                    mDeleteID.setVisible(false);
+                }
+                mList.setItemChecked(position, false);
                 toDeleteItemPosition = -1;
 
                 ArrayList<String> selectedID = new ArrayList<String>(nameNFCID.keySet());
@@ -157,9 +144,7 @@ public class ManageIDs extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 mDeleteID.setVisible(true);
                 mList.setItemChecked(position, true);
-                //mList.setSelection(position);
                 toDeleteItemPosition = position;
-                //mList.smoothScrollToPosition(position);
                 return true;
             }
         });
@@ -169,6 +154,8 @@ public class ManageIDs extends AppCompatActivity {
     public void onStop() {
         if (mydatabase != null && mydatabase.isOpen())
             mydatabase.close();
+        if (dbHelper != null)
+            dbHelper.close();
         super.onStop();
     }
 
@@ -186,10 +173,15 @@ public class ManageIDs extends AppCompatActivity {
 
         if (i == R.id.manageids_delete) {
             if (-1 != toDeleteItemPosition) {
-                String uName = ((Map.Entry) ((java.util.HashMap) mList.getItemAtPosition(toDeleteItemPosition)).entrySet().toArray()[0]).getValue().toString();
-                String whereClause = SqlHelper_NFCIDs.CODE_NAME + " ='" + uName + "'";
-                Toast.makeText(ManageIDs.this, uName + " deleted!", Toast.LENGTH_SHORT).show();
-                mydatabase.delete(SqlHelper_NFCIDs.TABLE_NAME, whereClause, null);
+                Object entry = mList.getItemAtPosition(toDeleteItemPosition);
+                String uName = entry instanceof Map
+                        ? String.valueOf(((Map<?, ?>) entry).get("Second Line"))
+                        : null;
+                if (uName != null) {
+                    mydatabase.delete(SqlHelper_NFCIDs.TABLE_NAME,
+                            SqlHelper_NFCIDs.CODE_NAME + " = ?", new String[]{uName});
+                    Toast.makeText(ManageIDs.this, uName + " deleted!", Toast.LENGTH_SHORT).show();
+                }
                 mDeleteID.setVisible(false);
                 toDeleteItemPosition = -1;
                 updateListView();
@@ -223,12 +215,12 @@ public class ManageIDs extends AppCompatActivity {
         SimpleAdapter adapter = new SimpleAdapter(ManageIDs.this, listHItems, R.layout.list_item,
                 new String[]{"First Line", "Second Line"},
                 new int[]{R.id.list_item_text_view, R.id.list_item_subtext_view});
-        Iterator it = nameNFCID.entrySet().iterator();
+        Iterator<Map.Entry<String, String>> it = nameNFCID.entrySet().iterator();
         while (it.hasNext()) {
             HashMap<String, String> resultsMap = new HashMap<>();
-            Map.Entry pair = (Map.Entry) it.next();
-            resultsMap.put("First Line", pair.getValue().toString());
-            resultsMap.put("Second Line", pair.getKey().toString());
+            Map.Entry<String, String> pair = it.next();
+            resultsMap.put("First Line", pair.getValue());
+            resultsMap.put("Second Line", pair.getKey());
             listHItems.add(resultsMap);
         }
         mList.setAdapter(adapter);
@@ -237,49 +229,7 @@ public class ManageIDs extends AppCompatActivity {
     private boolean clearAllCounters() {
         ContentValues data = new ContentValues();
         data.put(SqlHelper_NFCIDs.NB_COFFEES, 0);
-        if (0 != mydatabase.update(SqlHelper_NFCIDs.TABLE_NAME, data, null, null)) {
-            return true;
-        } else {
-            return false;
-        }
+        return 0 != mydatabase.update(SqlHelper_NFCIDs.TABLE_NAME, data, null, null);
     }
-
-
-    private void openDocumentTree() {
-        DocumentFile rootDirectory = DocumentFile.fromTreeUri(this, Uri.parse("content://downloads/public_downloads"));
-
-        if (rootDirectory != null) {
-            if (rootDirectory.isDirectory()) {
-                // Request access to the root directory of the Downloads folder
-                //rootDirectory.requestPermissions(this, REQUEST_OPEN_TREE_FOR_READ_ACCESS);
-            } else {
-                // Handle the file as a regular file
-            }
-        } else {
-            // Handle the error
-        }
-    }
-
-    /*
-    private void readFileFromDocumentTree() {
-        DocumentFile rootDirectory = DocumentFile.fromTreeUri(this, Uri.parse("content://downloads/public_downloads"));
-
-        if (rootDirectory != null) {
-            // Locate the file you want to read from the root directory
-            DocumentFile file = rootDirectory.findFile("my_file.txt");
-
-            if (file != null) {
-                try (InputStream inputStream = file.getContentResolver().openInputStream(file.getUri())) {
-                    // Read the file contents into a String
-                    String fileContent = readInputStream(inputStream);
-                    // Do something with the file content
-                    Log.d("MyApp", "File content: " + fileContent);
-                } catch (IOException e) {
-                }
-            }
-        }
-    }
-    */
 
 }
-

@@ -13,6 +13,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.math.BigInteger;
+import java.util.Locale;
 
 public class EditID extends AppCompatActivity {
     TextView etCardID, etCodeName, etName, etEMAil, etCoffees;
@@ -25,9 +26,8 @@ public class EditID extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // What the hell am I setting here?
         setContentView(R.layout.activity_edit_id);
+        WindowInsetsUtil.applySystemBarInsets(this, findViewById(android.R.id.content));
 
         etCardID = (TextView) findViewById(R.id.editID_etCardID);
         etCodeName = (TextView) findViewById(R.id.editID_etCodeName);
@@ -45,31 +45,27 @@ public class EditID extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                ContentValues data=new ContentValues();
+                ContentValues data = new ContentValues();
                 data.put(SqlHelper_NFCIDs.NFC_ID,       String.valueOf(etCardID.getText()));
                 data.put(SqlHelper_NFCIDs.CODE_NAME,    String.valueOf(etCodeName.getText()));
                 data.put(SqlHelper_NFCIDs.USER_NAME,    String.valueOf(etName.getText()));
                 data.put(SqlHelper_NFCIDs.USER_EMAIL,   String.valueOf(etEMAil.getText()));
-                data.put(SqlHelper_NFCIDs.NB_COFFEES,   String.valueOf(etCoffees.getText()));
+                data.put(SqlHelper_NFCIDs.NB_COFFEES,   parseCoffees(String.valueOf(etCoffees.getText())));
 
-                if(0 == mydatabase.update(SqlHelper_NFCIDs.TABLE_NAME, data, SqlHelper_NFCIDs.CODE_NAME+"=\""+etCodeName.getText()+"\"", null )) {
+                String[] whereArgs = new String[]{String.valueOf(etCodeName.getText())};
+
+                if (0 == mydatabase.update(SqlHelper_NFCIDs.TABLE_NAME, data,
+                        SqlHelper_NFCIDs.CODE_NAME + " = ?", whereArgs)) {
                     mydatabase.beginTransaction();
-                    mydatabase.insert(SqlHelper_NFCIDs.TABLE_NAME, null, data);
-                    mydatabase.setTransactionSuccessful();
-                    mydatabase.endTransaction();
+                    try {
+                        mydatabase.insert(SqlHelper_NFCIDs.TABLE_NAME, null, data);
+                        mydatabase.setTransactionSuccessful();
+                    } finally {
+                        mydatabase.endTransaction();
+                    }
                 }
 
                 finish();
-
-                /*
-                * adb -s 0334a941e0787166 shell
-                * run-as ro.dsgmedia.cox.nfcoffee
-                * cd /data/data/ro.dsgmedia.cox.nfcoffee
-                * ls -l
-                * sqlite3 /databases/NFCoffee
-                * .tables
-                *
-                * */
             }
         });
 
@@ -80,58 +76,15 @@ public class EditID extends AppCompatActivity {
             }
         });
 
-        byte[] NFCIDValue;
-        Bundle extras = getIntent().getExtras();
+        loadCardFromIntent();
+    }
 
-        if(extras != null)
-        {
-            // We got info
-            NFCIDValue = extras.getByteArray("NFC_ID");
-            if (NFCIDValue != null)
-            {
-                String NFCIDString = ByteArrayToHexString(NFCIDValue);
-                // We got an ID. Set the ID field value.
-                String localCodeName = ByteToBase36(NFCIDString);
-                Log.i("RCVID:", NFCIDString);
-                Log.i("RCVCN:", localCodeName);
-
-                Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM "+SqlHelper_NFCIDs.TABLE_NAME+" WHERE CODENAME='"+localCodeName+"';", null);
-
-                if(0 != rawQuerry.getCount()) {
-                    rawQuerry.moveToFirst();
-                    String UserName = rawQuerry.getString(2);
-                    String Email = rawQuerry.getString(3);
-                    String Coffees = String.valueOf(rawQuerry.getInt(4));
-                    SetNFCIDTextField(NFCIDString, localCodeName, UserName, Email, Coffees);
-                }
-                else
-                {
-                    SetNFCIDTextField(NFCIDString, localCodeName, "", "", "0");
-                }
-                rawQuerry.close();
-            } else {
-
-                String NFCIDString = extras.getString("CODE_NAME");
-                if (NFCIDString != null) {
-                    // We got an ID. Set the ID field value.
-                    Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM "+SqlHelper_NFCIDs.TABLE_NAME+" WHERE CODENAME='" + NFCIDString + "';", null);
-
-                    if (0 != rawQuerry.getCount()) {
-                        rawQuerry.moveToFirst();
-                        String NFCID = rawQuerry.getString(0);
-                        String UserName = rawQuerry.getString(2);
-                        String Email = rawQuerry.getString(3);
-                        String Coffees = String.valueOf(rawQuerry.getInt(4));
-                        SetNFCIDTextField(NFCID, NFCIDString, UserName, Email, Coffees);
-                    }
-                    rawQuerry.close();
-                }
-            }
-        }
-        else
-        {
-            // Unknown caller
-            return;
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // onStop() closes the database; make sure it is usable again if we come back.
+        if (mydatabase == null || !mydatabase.isOpen()) {
+            mydatabase = dbHelper.getWritableDatabase();
         }
     }
 
@@ -142,13 +95,74 @@ public class EditID extends AppCompatActivity {
         super.onStop();
     }
 
+    private void loadCardFromIntent() {
+        byte[] NFCIDValue;
+        Bundle extras = getIntent().getExtras();
+
+        if (extras == null) {
+            // Unknown caller
+            return;
+        }
+
+        // We got info
+        NFCIDValue = extras.getByteArray("NFC_ID");
+        if (NFCIDValue != null) {
+            String NFCIDString = ByteArrayToHexString(NFCIDValue);
+            // We got an ID. Set the ID field value.
+            String localCodeName = ByteToBase36(NFCIDString);
+            Log.i("RCVID:", NFCIDString);
+            Log.i("RCVCN:", localCodeName);
+
+            Cursor rawQuerry = mydatabase.rawQuery(
+                    "SELECT * FROM " + SqlHelper_NFCIDs.TABLE_NAME + " WHERE " + SqlHelper_NFCIDs.CODE_NAME + " = ?",
+                    new String[]{localCodeName});
+
+            if (0 != rawQuerry.getCount()) {
+                rawQuerry.moveToFirst();
+                String UserName = rawQuerry.getString(2);
+                String Email = rawQuerry.getString(3);
+                String Coffees = String.valueOf(rawQuerry.getInt(4));
+                SetNFCIDTextField(NFCIDString, localCodeName, UserName, Email, Coffees);
+            } else {
+                SetNFCIDTextField(NFCIDString, localCodeName, "", "", "0");
+            }
+            rawQuerry.close();
+            return;
+        }
+
+        String NFCIDString = extras.getString("CODE_NAME");
+        if (NFCIDString != null) {
+            // We got an ID. Set the ID field value.
+            Cursor rawQuerry = mydatabase.rawQuery(
+                    "SELECT * FROM " + SqlHelper_NFCIDs.TABLE_NAME + " WHERE " + SqlHelper_NFCIDs.CODE_NAME + " = ?",
+                    new String[]{NFCIDString});
+
+            if (0 != rawQuerry.getCount()) {
+                rawQuerry.moveToFirst();
+                String NFCID = rawQuerry.getString(0);
+                String UserName = rawQuerry.getString(2);
+                String Email = rawQuerry.getString(3);
+                String Coffees = String.valueOf(rawQuerry.getInt(4));
+                SetNFCIDTextField(NFCID, NFCIDString, UserName, Email, Coffees);
+            }
+            rawQuerry.close();
+        }
+    }
+
+    private static int parseCoffees(String value) {
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
     private void SetNFCIDTextField(String valueID, String valueCodeName, String valueName, String valueEmail, String coffees) {
         etCardID.setText(valueID);
         etCodeName.setText(valueCodeName);
         etName.setText(valueName);
         etEMAil.setText(valueEmail);
         etCoffees.setText(coffees);
-        //etCardID.setVisibility(View.VISIBLE);
     }
 
     private String ByteArrayToHexString(byte [] inarray) {
@@ -157,17 +171,15 @@ public class EditID extends AppCompatActivity {
             res = res.multiply(BigInteger.valueOf(256));
             res = res.add(BigInteger.valueOf(inarray[j] & 0xff));
         }
-        String out = res.toString(16).toUpperCase();
-        return out;
+        return res.toString(16).toUpperCase(Locale.ROOT);
     }
 
     private String ByteToBase36(String inarray) {
         BigInteger in = new BigInteger(inarray,16);
-        String out= in.toString(36).toUpperCase();
-        out = String.format("%1$11s", out).replace(' ', '0');
+        String out= in.toString(36).toUpperCase(Locale.ROOT);
+        out = String.format(Locale.ROOT, "%1$11s", out).replace(' ', '0');
         String extension = out.substring(out.length() - 3);
         String filename = out.substring(0, out.length() - 3);
-        out = filename + "." + extension;
-        return out;
+        return filename + "." + extension;
     }
 }

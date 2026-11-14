@@ -2,105 +2,188 @@ package ro.dsgmedia.cox.nfcoffee;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
+import android.net.LinkAddress;
+import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.net.NetworkRequest;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
-import android.os.Build;
-import android.preference.PreferenceManager;
-import androidx.annotation.NonNull;
 import android.util.Log;
 
-public class WifiConnect {
-    private Boolean isNetworkAvailable(MainActivity application) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) application.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Network nw = connectivityManager.getActiveNetwork();
-            if (nw == null) return false;
-            NetworkCapabilities actNw = connectivityManager.getNetworkCapabilities(nw);
-            return actNw != null && (actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) || actNw.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH));
-        } else {
-            NetworkInfo nwInfo = connectivityManager.getActiveNetworkInfo();
-            return nwInfo != null && nwInfo.isConnected();
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Connects the phone to the coffee machine's access point.
+ *
+ * Replaces the old implementation which polled WifiManager.getConnectionInfo()
+ * (deprecated in API 31, and returns "unknown" without location permission on
+ * newer Android versions) and never released the network binding.
+ */
+public final class WifiConnect {
+
+    private static final String TAG = "[NFCaffee]";
+    private static final String SSID = "NFCoffee";
+    private static final String PASSPHRASE = "freecoffee";
+
+    /** The system dialog needs a moment; the old code effectively waited ~30 s too. */
+    private static final int CONNECT_TIMEOUT_MS = 30_000;
+
+    /** Shown after a failed attempt: the reader only broadcasts its AP in transfer mode. */
+    private static final String RETRY_HINT =
+            "If the reader was idle, put it in transfer mode and press the cup again.";
+
+    private static ConnectivityManager connectivityManager;
+    private static ConnectivityManager.NetworkCallback networkCallback;
+    private static volatile Network boundNetwork;
+
+    private WifiConnect() {
+    }
+
+    /**
+     * @param status receives progress lines; may be {@code null}.
+     * @return {@code true} when the process is bound to the NFCoffee network,
+     *         {@code false} on timeout/refusal. Callers must always call
+     *         {@link #disconnectWifi(Activity)} afterwards.
+     */
+    public static Boolean connectWifi(Activity a, @Nullable StatusListener status) {
+        ConnectivityManager cm =
+                (ConnectivityManager) a.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) {
+            report(status, "Error: no connectivity service on this phone.");
+            return false;
+        }
+
+        WifiNetworkSpecifier specifier = new WifiNetworkSpecifier.Builder()
+                .setSsid(SSID)
+                .setWpa2Passphrase(PASSPHRASE)
+                .build();
+
+        NetworkRequest request = new NetworkRequest.Builder()
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                // The coffee machine has no internet uplink: without this the request
+                // would keep waiting for validation that can never succeed.
+                .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .setNetworkSpecifier(specifier)
+                .build();
+
+        final CountDownLatch done = new CountDownLatch(1);
+
+        report(status, "Connecting to " + SSID + "...");
+
+        connectivityManager = cm;
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(@NonNull Network network) {
+                boundNetwork = network;
+                cm.bindProcessToNetwork(network);
+                Log.i(TAG, "Connected to " + SSID + " as " + network);
+                String ip = firstIpAddress(cm, network);
+                report(status, "Connected to " + SSID + (ip != null ? " (IP " + ip + ")" : "") + ".");
+                done.countDown();
+            }
+
+            @Override
+            public void onUnavailable() {
+                Log.e(TAG, "ERROR: " + SSID + " not found / connection refused");
+                report(status, SSID + " was not found, or the connection was refused.");
+                report(status, RETRY_HINT);
+                done.countDown();
+            }
+
+            @Override
+            public void onLost(@NonNull Network network) {
+                Log.w(TAG, "Lost connection to " + network);
+                if (network.equals(boundNetwork)) {
+                    cm.bindProcessToNetwork(null);
+                    boundNetwork = null;
+                }
+            }
+        };
+
+        try {
+            cm.requestNetwork(request, networkCallback, CONNECT_TIMEOUT_MS);
+            if (!done.await(CONNECT_TIMEOUT_MS + 5_000L, TimeUnit.MILLISECONDS)) {
+                Log.e(TAG, "Error connection timeout!");
+                report(status, "Connection to " + SSID + " timed out.");
+                report(status, RETRY_HINT);
+                disconnectWifi(a);
+                return false;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            disconnectWifi(a);
+            return false;
+        } catch (IllegalArgumentException | SecurityException e) {
+            Log.e(TAG, "Unable to request the " + SSID + " network", e);
+            report(status, "Could not request the " + SSID + " network: " + e.getMessage());
+            disconnectWifi(a);
+            return false;
+        }
+
+        Network network = boundNetwork;
+        if (network == null) {
+            return false;
+        }
+        logIpAddress(cm, network);
+        return true;
+    }
+
+    /** Unbinds the process and releases the request. Safe to call more than once. */
+    public static void disconnectWifi(Activity a) {
+        ConnectivityManager cm =
+                (ConnectivityManager) a.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm != null) {
+            cm.bindProcessToNetwork(null);
+        }
+        if (connectivityManager != null && networkCallback != null) {
+            try {
+                connectivityManager.unregisterNetworkCallback(networkCallback);
+            } catch (IllegalArgumentException ignored) {
+                // Already released by the timeout.
+            }
+        }
+        connectivityManager = null;
+        networkCallback = null;
+        boundNetwork = null;
+    }
+
+    private static void logIpAddress(ConnectivityManager cm, Network network) {
+        String ip = firstIpAddress(cm, network);
+        if (ip != null) {
+            Log.i(TAG, "IP: " + ip);
         }
     }
-    public static Boolean connectWifi(Activity a) {
-        WifiManager mainWifiObj;
-        // check settings
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(a);
-        String ssid = sharedPref.getString("wifiNFCSSID", "NoWiFi");
-        String key = sharedPref.getString("wifiNFCPWD", "nofreecoffee");
-        ssid = "NFCoffee";
 
-        // check wifi status
-        mainWifiObj = (WifiManager) a.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        int wifiState = mainWifiObj.getWifiState();
-        if (wifiState != WifiManager.WIFI_STATE_ENABLED) {
-            mainWifiObj.setWifiEnabled(true); /* this does not work anymore there is no workaround for API > 29 (Q) */
+    /** @return the first IPv4 address of the network, or {@code null}. */
+    private static String firstIpAddress(ConnectivityManager cm, Network network) {
+        LinkProperties linkProperties = cm.getLinkProperties(network);
+        if (linkProperties == null) {
+            return null;
         }
-        Log.i("[NFCaffee]", "WiFI is enabled!");
-
-        Integer timeout = 59;
-        // new from API 10 according to Bard
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-
-            WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder();
-            builder.setSsid("NFCoffee");
-            builder.setWpa2Passphrase("freecoffee");
-
-            WifiNetworkSpecifier wifiNetworkSpecifier = builder.build();
-            NetworkRequest.Builder networkRequestBuilder = new NetworkRequest.Builder();
-            networkRequestBuilder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-            networkRequestBuilder.setNetworkSpecifier(wifiNetworkSpecifier);
-
-            NetworkRequest networkRequest = networkRequestBuilder.build();
-            ConnectivityManager cm = (ConnectivityManager) a.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-            ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
-                @Override
-                public void onAvailable(@NonNull Network network) {
-                    //Use this network object to Send request.
-                    //eg - Using OkHttp library to create a service request
-                    //Service is an OkHttp interface where we define docs. Please read OkHttp docs
-                    super.onAvailable(network);
-                    ConnectivityManager connectivityManager = (ConnectivityManager) a.getSystemService(Context.CONNECTIVITY_SERVICE);
-                    connectivityManager.bindProcessToNetwork(network);
-                    Log.e("[NFCaffee]", "Conn: "+ network);
-                }
-            };
-            cm.requestNetwork(networkRequest, networkCallback);
-
-            WifiInfo wifiInfo;
-            wifiInfo = mainWifiObj.getConnectionInfo();
-            while ((timeout > 0) &&
-                    (
-                            (!wifiInfo.getSSID().replaceAll("\"", "").equals(ssid)) ||
-                                    (wifiInfo.getBSSID().equals("00:00:00:00:00:00")) ||
-                                    (wifiInfo.getIpAddress() == 0)
-                    )
-            ) {
-                wifiInfo = mainWifiObj.getConnectionInfo();
-                timeout--;
-                try {
-                    Log.w("[NFCaffee]", "Waiting "+String.valueOf(timeout) + wifiInfo.getSSID());
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        String fallback = null;
+        for (LinkAddress address : linkProperties.getLinkAddresses()) {
+            String host = address.getAddress().getHostAddress();
+            if (host == null) {
+                continue;
             }
-            if (0 == timeout) {
-                //publishProgress(" ERROR: " + ssid + " not found" + System.getProperty("line.separator"));
-                Log.e("[NFCaffee]", "Error connection timeout!");
-                return null;
+            if (address.getAddress() instanceof java.net.Inet4Address) {
+                return host;
             }
-            int ip = wifiInfo.getIpAddress();
-            String result = String.format("%d.%d.%d.%d", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff), (ip >> 24 & 0xff));
-            Log.i("[NFCaffee]", "IP:" + result);
+            if (fallback == null) {
+                fallback = host;
+            }
         }
-        return true;
+        return fallback;
+    }
+
+    private static void report(@Nullable StatusListener status, String message) {
+        if (status != null) {
+            status.onStatus(message);
+        }
     }
 }
