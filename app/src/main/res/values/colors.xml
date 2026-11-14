@@ -15,7 +15,4 @@
     <color name="md_on_secondary">#FFFFFF</color>
     <color name="md_secondary_container">#E0E1F9</color>
     <color name="md_on_secondary_container">#181A2C</color>
-
-    <!-- Row highlight in the Manage IDs list -->
-    <color name="md_list_item_activated">#E3E3FF</color>
 </resources>

@@ -3,7 +3,6 @@
     android:id="@+id/list_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/state_selector"
     android:gravity="center_vertical"
     android:minHeight="64dp"
     android:orientation="vertical"

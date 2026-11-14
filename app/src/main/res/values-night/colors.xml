@@ -10,6 +10,4 @@
     <color name="md_on_secondary">#2D2F42</color>
     <color name="md_secondary_container">#434659</color>
     <color name="md_on_secondary_container">#E0E1F9</color>
-
-    <color name="md_list_item_activated">#2A3060</color>
 </resources>

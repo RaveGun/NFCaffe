@@ -15,6 +15,7 @@
     -->
 
     <application
+        android:name=".NFCoffeeApp"
         android:allowBackup="true"
         android:enableOnBackInvokedCallback="true"
         android:hardwareAccelerated="true"
