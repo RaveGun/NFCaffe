@@ -146,8 +146,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         int i = item.getItemId();
 
         if (i == R.id.navigation_item_help) {
-            // there is no help implemented
-            Toast.makeText(getApplicationContext(), "Help is not available now.", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(this, HelpActivity.class));
         } else if (i == R.id.navigation_item_manIDs) {
             // open manage IDs activity
             Intent ManageIDsIntent = new Intent(this, ManageIDs.class);

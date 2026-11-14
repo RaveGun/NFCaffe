@@ -18,7 +18,9 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
@@ -50,6 +52,15 @@ public class ShareData extends BaseActivity {
                         }
                     });
 
+    /** Loads an already saved CSV into the text box so it can be reviewed first. */
+    private final ActivityResultLauncher<String[]> openCsvDocument =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(),
+                    uri -> {
+                        if (uri != null) {
+                            readCsv(uri);
+                        }
+                    });
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share);
@@ -61,6 +72,7 @@ public class ShareData extends BaseActivity {
         exportedData = findViewById(R.id.exportData);
         Button copyDataButton = (Button) findViewById(R.id.copyData);
         Button pasteDataButton = (Button) findViewById(R.id.pasteData);
+        Button openFileButton = (Button) findViewById(R.id.openFile);
         Button saveDataButton = (Button) findViewById(R.id.saveData);
         Button closeButton = (Button) findViewById(R.id.closeNoSave);
 
@@ -73,6 +85,7 @@ public class ShareData extends BaseActivity {
             // Export action was called
             copyDataButton.setVisibility(View.VISIBLE);
             pasteDataButton.setVisibility(View.GONE);
+            openFileButton.setVisibility(View.GONE);
             saveDataButton.setVisibility(View.GONE);
             closeButton.setVisibility(View.VISIBLE);
             csvToSave = buildCsv();
@@ -84,6 +97,7 @@ public class ShareData extends BaseActivity {
             // Import was called
             copyDataButton.setVisibility(View.GONE);
             pasteDataButton.setVisibility(View.VISIBLE);
+            openFileButton.setVisibility(View.VISIBLE);
             saveDataButton.setVisibility(View.VISIBLE);
             closeButton.setVisibility(View.VISIBLE);
         }
@@ -122,6 +136,16 @@ public class ShareData extends BaseActivity {
     public void btnSavePressed(View v) {
         importFromText();
         finish();
+    }
+
+    /** Opens the document picker to load a CSV that was saved earlier. */
+    public void btnOpenFilePressed(View v) {
+        openCsvDocument.launch(new String[]{
+                "text/*",
+                "application/csv",
+                "application/vnd.ms-excel",
+                "application/octet-stream"
+        });
     }
 
     public void btnClosePressed(View v) {
@@ -169,8 +193,7 @@ public class ShareData extends BaseActivity {
         return value == null ? "" : value;
     }
 
-    private void writeCsv(Uri uri) {
-        try (OutputStream os = getContentResolver().openOutputStream(uri, "wt")) {
+    private void writeCsv(Uri uri) {        try (OutputStream os = getContentResolver().openOutputStream(uri, "wt")) {
             if (os == null) {
                 throw new IOException("The document provider returned no stream");
             }
@@ -181,6 +204,32 @@ public class ShareData extends BaseActivity {
         } catch (IOException e) {
             Log.w("STORAGE", "Error writing the export", e);
             Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** Reads the picked document into the text box so it can be reviewed first. */
+    private void readCsv(Uri uri) {
+        try (InputStream is = getContentResolver().openInputStream(uri)) {
+            if (is == null) {
+                throw new IOException("The document provider returned no stream");
+            }
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] chunk = new byte[8192];
+            int read;
+            while ((read = is.read(chunk)) != -1) {
+                buffer.write(chunk, 0, read);
+            }
+            String text = new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+            // Spreadsheet programs like to prefix a UTF-8 BOM, which would break
+            // the header comparison below.
+            if (text.startsWith("\uFEFF")) {
+                text = text.substring(1);
+            }
+            exportedData.setText(text);
+            Toast.makeText(this, "File loaded. Press Import to apply.", Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Log.w("STORAGE", "Error reading the import file", e);
+            Toast.makeText(this, "Could not read the file: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 

@@ -36,5 +36,18 @@
     <string name="card_row">%1$s [%2$d]</string>
     <string name="unnamed_card">Unnamed card</string>
     <string name="dynamic_colour">Wallpaper colours</string>
+    <string name="open_file">Open file</string>
+    <string name="import_label">Import</string>
+
+    <!-- Help screen -->
+    <string name="help_intro">NFCoffee reads the coffee counters from the reader and keeps one counter per NFC card on this phone.</string>
+    <string name="help_section_reader">Getting the data</string>
+    <string name="help_body_reader">1. Put the reader in transfer mode — it only opens its Wi-Fi network while transferring.\n2. Press the coffee cup on the main screen.\n3. Confirm the connection to “NFCoffee” when Android asks.\n4. When the transfer finishes, the phone returns to the normal network.\n\nIf it says the network was not found, or it times out, the reader is probably not in transfer mode yet. Press the cup again.</string>
+    <string name="help_section_cards">Cards and counters</string>
+    <string name="help_body_cards">Manage IDs lists every card. Tap a card to give it a name and an e-mail address; long-press it to select it, then use the bin icon to delete it.\n\n“Delete counters” sets every card back to zero. Do that after the invoice run, not before.</string>
+    <string name="help_section_csv">Exporting and importing</string>
+    <string name="help_body_csv">“Export IDs” writes a CSV with the columns NFCID, CODENAME, UNAME, EMAIL, COFF to the location you choose. The same text is shown on screen and can be copied.\n\n“Import IDs” accepts a CSV: paste it, or use “Open file” to load one that was saved earlier. Nothing is written to the database until you press “Import”.</string>
+    <string name="help_section_about">About and credits</string>
+    <string name="help_body_about">Original app: DSGMedia.ro, 2017.\nRedesign and platform update, 2026: RaveGun, with an AI coding assistant (DeepSeek V4.1 Flash, OpenCode).\n\nContact: office@dsgmedia.ro</string>
 
 </resources>

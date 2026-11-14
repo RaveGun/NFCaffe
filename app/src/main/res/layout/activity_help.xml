@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="ro.dsgmedia.cox.nfcoffee.HelpActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/help_intro"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                style="@style/HelpHeading"
+                android:text="@string/help_section_reader" />
+
+            <TextView
+                style="@style/HelpBody"
+                android:text="@string/help_body_reader" />
+
+            <TextView
+                style="@style/HelpHeading"
+                android:text="@string/help_section_cards" />
+
+            <TextView
+                style="@style/HelpBody"
+                android:text="@string/help_body_cards" />
+
+            <TextView
+                style="@style/HelpHeading"
+                android:text="@string/help_section_csv" />
+
+            <TextView
+                style="@style/HelpBody"
+                android:text="@string/help_body_csv" />
+
+            <TextView
+                style="@style/HelpHeading"
+                android:text="@string/help_section_about" />
+
+            <TextView
+                style="@style/HelpBody"
+                android:text="@string/help_body_about" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>
