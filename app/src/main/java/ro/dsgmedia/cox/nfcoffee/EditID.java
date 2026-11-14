@@ -10,12 +10,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
 
 import java.math.BigInteger;
 import java.util.Locale;
 
-public class EditID extends AppCompatActivity {
+public class EditID extends BaseActivity {
     TextView etCardID, etCodeName, etName, etEMAil, etCoffees;
     Button bSaveData;
     Button bCancel;

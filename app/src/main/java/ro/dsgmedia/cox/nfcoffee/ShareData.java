@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,7 +26,7 @@ import java.util.Calendar;
 import java.util.Locale;
 
 
-public class ShareData extends AppCompatActivity {
+public class ShareData extends BaseActivity {
 
     private static final String CSV_HEADER = "NFCID,CODENAME,UNAME,EMAIL,COFF";
 

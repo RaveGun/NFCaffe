@@ -9,9 +9,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 
-public class NFCReadCard extends AppCompatActivity implements NfcAdapter.ReaderCallback {
+public class NFCReadCard extends BaseActivity implements NfcAdapter.ReaderCallback {
 
     public static final String TAG = "NfcDemo";
     public static final String MIME_TEXT_PLAIN = "text/plain";

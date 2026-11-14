@@ -34,14 +34,15 @@
 
                 <ImageButton
                     android:id="@+id/getTcpData"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
                     android:layout_marginTop="16dp"
-                    android:backgroundTint="@android:color/transparent"
+                    android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/get_the_data_over_the_tcp_connection"
-                    android:scaleX="0.75"
-                    android:scaleY="0.75"
-                    app:srcCompat="@drawable/button_tcp_transfer" />
+                    android:padding="24dp"
+                    app:srcCompat="@drawable/ic_cup"
+                    app:tint="?attr/colorPrimary" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
