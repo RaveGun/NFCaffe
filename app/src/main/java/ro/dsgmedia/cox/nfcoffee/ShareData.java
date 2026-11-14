@@ -148,10 +148,12 @@ public class ShareData extends AppCompatActivity {
         Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM " + SqlHelper_NFCIDs.TABLE_NAME + " ORDER BY " + SqlHelper_NFCIDs.USER_NAME + " ASC;", null);
         rawQuerry.moveToFirst();
         for (int i = 0; i < rawQuerry.getCount(); i++) {
-            String NFCIDString = rawQuerry.getString(0);
-            String CodeNameString = rawQuerry.getString(1);
-            String UserName = rawQuerry.getString(2);
-            String Email = rawQuerry.getString(3);
+            String NFCIDString = orEmpty(rawQuerry.getString(0));
+            String CodeNameString = orEmpty(rawQuerry.getString(1));
+            // UNAME/EMAIL are NULL for cards that came straight from the reader,
+            // and StringBuilder.append(null) would write the literal "null".
+            String UserName = orEmpty(rawQuerry.getString(2));
+            String Email = orEmpty(rawQuerry.getString(3));
             String Coffees = String.valueOf(rawQuerry.getInt(4));
             csv.append(NFCIDString).append(',')
                     .append(CodeNameString).append(',')
@@ -162,6 +164,10 @@ public class ShareData extends AppCompatActivity {
         }
         rawQuerry.close();
         return csv.toString();
+    }
+
+    private static String orEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private void writeCsv(Uri uri) {

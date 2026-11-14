@@ -34,5 +34,6 @@
     <string name="csv_data">CSV data</string>
     <string name="manage_options_button">Open actions</string>
     <string name="card_row">%1$s [%2$d]</string>
+    <string name="unnamed_card">Unnamed card</string>
 
 </resources>

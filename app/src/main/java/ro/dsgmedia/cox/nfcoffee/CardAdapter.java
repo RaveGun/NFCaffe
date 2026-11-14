@@ -68,8 +68,14 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder
     @Override
     public void onBindViewHolder(@NonNull CardViewHolder holder, int position) {
         CardEntry item = items.get(position);
+        // Cards that came from the reader and were never edited have a NULL
+        // UNAME, which used to render as the literal text "null".
+        String displayName = item.userName;
+        if (displayName == null || displayName.trim().isEmpty()) {
+            displayName = holder.itemView.getContext().getString(R.string.unnamed_card);
+        }
         holder.name.setText(holder.itemView.getContext()
-                .getString(R.string.card_row, item.userName, item.coffees));
+                .getString(R.string.card_row, displayName, item.coffees));
         holder.codeName.setText(item.codeName);
         // Palette-aware selection tint; a theme attribute inside a
         // StateListDrawable fails to inflate, so it is resolved here instead.
