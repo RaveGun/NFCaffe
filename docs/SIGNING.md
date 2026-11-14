@@ -1,6 +1,61 @@
 # Release signing — NFCoffee
 
-## Current state (restored 2026-11-14)
+## Keys in play
+
+| | **Upload key in use** (until the reset is approved) | **New upload key** (generated 2026-11-14) |
+|---|---|---|
+| Keystore | `~/AndroidKeysStore/nfcoffee_key.jks` | `~/AndroidKeysStore/nfcoffee-upload.p12` |
+| Format | JKS (legacy) | PKCS12 |
+| Alias | `key0` | `key0` |
+| Certificate SHA-256 | `A7:BF:D9:86:0F:DD:C2:6E:6E:96:FE:EF:F5:C3:F2:16:08:97:D4:CE:83:23:E8:2F:2B:79:11:C0:D4:37:30:E8` | `86:C7:66:52:16:22:78:B1:C9:91:13:3E:90:1B:A7:99:05:D3:79:AB:BE:B3:51:71:2D:3E:EB:B5:9E:6B:6B:43` |
+| Owner / validity | `O=DSGMedia.ro`, 2017-07-17 → 2116-06-23 | `CN=NFCoffee Upload, O=DSGMedia.ro, C=RO`, 2026-11-14 → 2054-04-01 |
+| Key | RSA 2048 | RSA 4096 |
+
+**Reset status:** requested 2026-11-14 and approved. Google activates the new
+certificate on **2026-11-16 at 14:11** (as displayed by Play Console).
+
+Until that moment every upload is still validated against the **old**
+certificate, so `keystore.properties` must keep pointing at
+`nfcoffee_key.jks`. Avoid uploading anything in the transition window if you
+can; after the activation timestamp, sign with the new key only.
+
+### Switching to the new key (on/after 2026-11-16 14:11)
+
+```properties
+storeFile=/home/cox/AndroidKeysStore/nfcoffee-upload.p12
+storePassword=<the new password>
+keyAlias=key0
+keyPassword=<the new password>
+```
+
+Then verify the bundle really was signed with it:
+
+```bash
+KT=$JAVA_HOME/bin/keytool
+$KT -printcert -jarfile app/build/outputs/bundle/release/app-release.aab | grep SHA256
+# must print 86:C7:66:52:...
+```
+
+The old keystore stays in the folder as an archive; it simply stops being
+accepted for uploads.
+
+## Where the copies live
+
+| Copy | Location | Notes |
+|---|---|---|
+| Working copy | `~/AndroidKeysStore/nfcoffee-upload.p12` | mode 600, needed to build |
+| NAS | `/media/coxshare/only4me/AndroidKeysStore/NFCoffee-signing/`<br>(`//192.168.1.50/share/coxshare`) | SHA-256 verified |
+| USB stick | `NFCoffee-signing/` on the FAT32 stick | kept in the safe |
+| Password | Bitwarden vault + paper copy in a sealed envelope in the safe | |
+
+The NAS and USB copies also carry `README.txt` (fingerprints and restore
+steps) and `archive-old-key/nfcoffee_key.jks` for the 2017 key.
+
+The `.p12` is protected at rest by AES-256/PBES2 under the Bitwarden-generated
+passphrase, so the FAT32 stick (no Unix permissions) and the CIFS share
+(0770, LAN only) are acceptable storage without an extra encryption layer.
+
+## Historical state (restored 2026-11-14)
 
 | Item | Value |
 |---|---|
@@ -40,9 +95,9 @@ That means:
 - `nfcoffee_key.jks` is only used to sign the upload. Google re-signs it.
 - **The certificate users see is not `A7:BF:D9:…`.** That is expected.
 - If this upload key is ever lost or leaked you request an *upload key reset*
-  in Play Console → Test and release → App integrity. The app keeps its
-  identity and existing installs keep updating. You do **not** need to publish
-  a new app.
+  in Play Console → **Protected with Play → Play Store protection → Manage
+  Play app signing**. The app keeps its identity and existing installs keep
+  updating. You do **not** need to publish a new app.
 
 ## Verifying the keystore
 
@@ -69,7 +124,10 @@ Verify what you produced:
 $KT -printcert -jarfile app/build/outputs/bundle/release/app-release.aab
 ```
 
-## Creating a NEW upload key (when you are ready)
+## Creating another upload key (reference)
+
+The current new key was generated on 2026-11-14 with exactly this command
+(the password is only in the password manager, never in this repo):
 
 ```bash
 KT=/var/lib/flatpak/app/com.google.AndroidStudio/x86_64/stable/active/files/extra/jbr/bin/keytool
@@ -79,7 +137,7 @@ $KT -genkeypair \
   -storetype PKCS12 \
   -alias key0 \
   -keyalg RSA -keysize 4096 -validity 10000 \
-  -dname "O=DSGMedia.ro, CN=NFCoffee Upload"
+  -dname "CN=NFCoffee Upload, O=DSGMedia.ro, C=RO"
 ```
 
 Notes:
@@ -87,11 +145,16 @@ Notes:
 - `-validity 10000` (~27 years). Google requires the key to be valid past
   **22 October 2033**.
 - Use **PKCS12**, not JKS. Strongly prefer a 4096-bit RSA key.
-- Put the password in a password manager, then update `keystore.properties`.
+- Use the **same** password for store and key: PKCS12 does not support
+  different ones.
+- Put the password in a password manager before you press Enter.
 - `storeFile` may point anywhere; keep it **outside** the repository.
 
-Then in Play Console → **App integrity → App signing → Request upload key
-reset**, upload the *certificate* (not the key):
+Export the certificate and upload it in Play Console →
+**Protected with Play → Play Store protection → Manage Play app signing** →
+*Upload key certificate* → **Request upload key reset**
+(older documentation still says *Release → Setup → App integrity*; Google
+renamed that area). Upload the *certificate*, never the keystore:
 
 ```bash
 $KT -export -rfc -alias key0 \
@@ -99,8 +162,8 @@ $KT -export -rfc -alias key0 \
   -file ~/AndroidKeysStore/upload_certificate.pem
 ```
 
-Google reviews the request (usually a few days). Until it is approved, keep
-signing uploads with the **old** key.
+Google reviews the request (turnaround is not published; plan for days).
+Until it is approved, keep signing uploads with the **old** key.
 
 ## Security notes
 
