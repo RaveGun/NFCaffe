@@ -15,4 +15,8 @@
     <color name="md_on_secondary">#FFFFFF</color>
     <color name="md_secondary_container">#E0E1F9</color>
     <color name="md_on_secondary_container">#181A2C</color>
+
+    <!-- Adaptive launcher icon background. Fixed brand colour: launcher icons
+         are not themed by Material You (only the optional monochrome layer is). -->
+    <color name="ic_launcher_background">#304FFE</color>
 </resources>
