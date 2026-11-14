@@ -42,6 +42,8 @@ android {
 
     buildTypes {
         debug {
+            // Makes it obvious in Settings > Apps which build is installed.
+            versionNameSuffix = '-debug'
         }
         release {
             minifyEnabled = true
