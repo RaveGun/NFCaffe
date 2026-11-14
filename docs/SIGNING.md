@@ -1,0 +1,114 @@
+# Release signing — NFCoffee
+
+## Current state (restored 2026-11-14)
+
+| Item | Value |
+|---|---|
+| Keystore (canonical) | `~/AndroidKeysStore/nfcoffee_key.jks` |
+| Keystore format | JKS (convert to PKCS12 when you rotate) |
+| Alias used for release | `key0` |
+| Certificate SHA-256 | `A7:BF:D9:86:0F:DD:C2:6E:6E:96:FE:EF:F5:C3:F2:16:08:97:D4:CE:83:23:E8:2F:2B:79:11:C0:D4:37:30:E8` |
+| Certificate owner / validity | `O=DSGMedia.ro`, 2017-07-17 → 2116-06-23 |
+
+Backups of the same file (identical SHA-256 `ee766c1c…`) still exist at:
+
+- `~/../run/media/cox/newhome/backup/Ubuntu/cox/Development/nfcoffee_key.jks`
+- `…/NFCaffe/ReleaseOutput/Old_Java_Store_Key/nfcoffee_key.jks`
+
+Gradle does **not** hardcode any of this any more. It reads `keystore.properties`
+in the project root, which is git-ignored:
+
+```properties
+storeFile=/home/cox/AndroidKeysStore/nfcoffee_key.jks
+storePassword=…
+keyAlias=key0
+keyPassword=…
+```
+
+If `keystore.properties` is absent, debug builds still work; release builds
+stop with an explicit error instead of silently producing an unsigned bundle.
+
+## This is an UPLOAD key, not the app signing key
+
+`ReleaseOutput/Old_Java_Store_Key/` proves the app is enrolled in **Google Play
+App Signing** (`pepk.jar`, `encryption_public_key.pem`,
+`encrypted_private_key.pem`, `private_key.pepk`, `gen_key_command.sh`).
+
+That means:
+
+- Google holds the **app signing key** and signs what users download.
+- `nfcoffee_key.jks` is only used to sign the upload. Google re-signs it.
+- **The certificate users see is not `A7:BF:D9:…`.** That is expected.
+- If this upload key is ever lost or leaked you request an *upload key reset*
+  in Play Console → Test and release → App integrity. The app keeps its
+  identity and existing installs keep updating. You do **not** need to publish
+  a new app.
+
+## Verifying the keystore
+
+```bash
+# JDK bundled with the Android Studio flatpak
+KT=/var/lib/flatpak/app/com.google.AndroidStudio/x86_64/stable/active/files/extra/jbr/bin/keytool
+
+$KT -list -v -keystore ~/AndroidKeysStore/nfcoffee_key.jks -storepass 'PASSWORD'
+```
+
+Check that the SHA-256 of `key0` still matches the table above.
+
+## Building a signed release
+
+```bash
+export JAVA_HOME=/var/lib/flatpak/app/com.google.AndroidStudio/x86_64/stable/active/files/extra/jbr
+./gradlew bundleRelease          # -> app/build/outputs/bundle/release/app-release.aab
+./gradlew assembleRelease        # -> app/build/outputs/apk/release/app-release.apk
+```
+
+Verify what you produced:
+
+```bash
+$KT -printcert -jarfile app/build/outputs/bundle/release/app-release.aab
+```
+
+## Creating a NEW upload key (when you are ready)
+
+```bash
+KT=/var/lib/flatpak/app/com.google.AndroidStudio/x86_64/stable/active/files/extra/jbr/bin/keytool
+
+$KT -genkeypair \
+  -keystore ~/AndroidKeysStore/nfcoffee-upload.p12 \
+  -storetype PKCS12 \
+  -alias key0 \
+  -keyalg RSA -keysize 4096 -validity 10000 \
+  -dname "O=DSGMedia.ro, CN=NFCoffee Upload"
+```
+
+Notes:
+
+- `-validity 10000` (~27 years). Google requires the key to be valid past
+  **22 October 2033**.
+- Use **PKCS12**, not JKS. Strongly prefer a 4096-bit RSA key.
+- Put the password in a password manager, then update `keystore.properties`.
+- `storeFile` may point anywhere; keep it **outside** the repository.
+
+Then in Play Console → **App integrity → App signing → Request upload key
+reset**, upload the *certificate* (not the key):
+
+```bash
+$KT -export -rfc -alias key0 \
+  -keystore ~/AndroidKeysStore/nfcoffee-upload.p12 \
+  -file ~/AndroidKeysStore/upload_certificate.pem
+```
+
+Google reviews the request (usually a few days). Until it is approved, keep
+signing uploads with the **old** key.
+
+## Security notes
+
+- The old keystore password appeared in plain text in `app/build.gradle` on a
+  **public** GitHub repository (`RaveGun/NFCaffe`) from 2017 until 2026-11-14.
+  The `.jks` itself was never committed. Treat the *password* as compromised:
+  rotate it when you create the new key.
+- Never commit `keystore.properties`, `*.jks`, `*.p12`, `*.pepk` or `*.pem`.
+  `.gitignore` now covers all of them.
+- Keep at least two offline backups of the keystore. Losing it is recoverable
+  (upload key reset) but annoying; losing it *and* Play Console access is not.

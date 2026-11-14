@@ -1,9 +1,25 @@
 *.iml
 .gradle
 /local.properties
+
+# --- Signing material: never commit --------------------------------
+/keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pepk
+*.pem
+# -------------------------------------------------------------------
+
 /.idea/workspace.xml
 /.idea/libraries
 .DS_Store
 /build
 /captures
 .externalNativeBuild
+
+# Build outputs
+/app/release/
+/app/build/
+/ReleaseOutput/
+/NFCaffe.zip

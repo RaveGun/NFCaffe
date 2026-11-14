@@ -1,50 +1,100 @@
-apply plugin: 'com.android.application'
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+/*
+ * Release signing is driven by keystore.properties, which is NOT in version
+ * control (see .gitignore and docs/SIGNING.md). Keeping the location and the
+ * passwords out of build.gradle means this file can be published safely.
+ */
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+def keystoreProperties = new Properties()
+def hasKeystore = keystorePropertiesFile.exists()
+if (hasKeystore) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+} else {
+    logger.warn("keystore.properties not found: release builds will NOT be signed.")
+}
 
 android {
-    signingConfigs {
-        debug_release {
-            keyPassword 'REDACTED'
-            storeFile file('/home/cox/Development/nfcoffee_key.jks')
-            storePassword 'REDACTED'
-            keyAlias 'key0'
-        }
-    }
-    namespace "ro.dsgmedia.cox.nfcoffee"
+    namespace = 'ro.dsgmedia.cox.nfcoffee'
+    compileSdk = 37
+
     defaultConfig {
-        compileSdkVersion 33
-        applicationId "ro.dsgmedia.cox.nfcoffee"
-        minSdkVersion 30
-        targetSdkVersion 33
-        versionCode 6
-        versionName "5.1"
-        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        applicationId = 'ro.dsgmedia.cox.nfcoffee'
+        minSdk = 30
+        targetSdk = 36
+        versionCode = 7
+        versionName = '5.2'
+        testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
     }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug_release
-            debuggable false
+
+    signingConfigs {
+        if (hasKeystore) {
+            release {
+                storeFile = file(keystoreProperties['storeFile'])
+                storePassword = keystoreProperties['storePassword']
+                keyAlias = keystoreProperties['keyAlias']
+                keyPassword = keystoreProperties['keyPassword']
+            }
         }
+    }
+
+    buildTypes {
         debug {
         }
+        release {
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (hasKeystore) {
+                signingConfig = signingConfigs.release
+            }
+            debuggable = false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = true
+        warningsAsErrors = false
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+}
+
+// Fail loudly instead of producing an unsigned artefact.
+gradle.taskGraph.whenReady { graph ->
+    def releaseTask = graph.allTasks.any {
+        it.name in ['bundleRelease', 'assembleRelease', 'packageRelease', 'packageReleaseBundle']
+    }
+    if (releaseTask && !hasKeystore) {
+        throw new GradleException(
+            "Release builds need keystore.properties (keystore path + passwords). " +
+            "See docs/SIGNING.md.")
     }
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.preference:preference:1.2.1'
-    implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
-    implementation 'com.opencsv:opencsv:4.6'
+    implementation libs.androidx.core
+    implementation libs.androidx.activity
+    implementation libs.androidx.appcompat
+    implementation libs.androidx.constraintlayout
+    implementation libs.androidx.drawerlayout
+    implementation libs.androidx.documentfile
+    implementation libs.google.material
 
-    api 'androidx.appcompat:appcompat:1.6.1'
-    api 'androidx.constraintlayout:constraintlayout:2.1.4'
-    api 'androidx.legacy:legacy-support-v4:1.0.0'
-    api 'com.google.android.material:material:1.8.0'
-    api 'com.github.clans:fab:1.6.4'
+    // TODO(phase 4): replace with Material FABs and drop this unmaintained library.
+    implementation libs.clans.fab
 
-    androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    testImplementation 'junit:junit:4.12'
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.test.ext.junit
+    androidTestImplementation libs.androidx.espresso.core
 }
