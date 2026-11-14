@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 brand roles (dark). Neutral surfaces come from the parent theme. -->
+    <color name="md_primary">#BAC3FF</color>
+    <color name="md_on_primary">#001A75</color>
+    <color name="md_primary_container">#1F35C8</color>
+    <color name="md_on_primary_container">#DFE0FF</color>
+
+    <color name="md_secondary">#C4C5DD</color>
+    <color name="md_on_secondary">#2D2F42</color>
+    <color name="md_secondary_container">#434659</color>
+    <color name="md_on_secondary_container">#E0E1F9</color>
+
+    <color name="md_list_item_activated">#2A3060</color>
+</resources>

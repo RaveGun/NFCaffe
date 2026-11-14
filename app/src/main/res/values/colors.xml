@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#304ffe</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#ff4081</color>
+    <!--
+        Material 3 brand roles (light).
+        Only the brand roles are overridden; the neutral surfaces, outlines and
+        error colours come from Theme.Material3 so they stay consistent and
+        adapt automatically in dark mode (values-night/colors.xml).
+    -->
+    <color name="md_primary">#304FFE</color>
+    <color name="md_on_primary">#FFFFFF</color>
+    <color name="md_primary_container">#DFE0FF</color>
+    <color name="md_on_primary_container">#00105C</color>
+
+    <color name="md_secondary">#5B5D72</color>
+    <color name="md_on_secondary">#FFFFFF</color>
+    <color name="md_secondary_container">#E0E1F9</color>
+    <color name="md_on_secondary_container">#181A2C</color>
+
+    <!-- Row highlight in the Manage IDs list -->
+    <color name="md_list_item_activated">#E3E3FF</color>
 </resources>

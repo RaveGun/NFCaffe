@@ -73,8 +73,8 @@ public class ShareData extends AppCompatActivity {
         if (value == 1) {
             // Export action was called
             copyDataButton.setVisibility(View.VISIBLE);
-            pasteDataButton.setVisibility(View.INVISIBLE);
-            saveDataButton.setVisibility(View.INVISIBLE);
+            pasteDataButton.setVisibility(View.GONE);
+            saveDataButton.setVisibility(View.GONE);
             closeButton.setVisibility(View.VISIBLE);
             csvToSave = buildCsv();
             exportedData.setText(csvToSave);
@@ -83,7 +83,7 @@ public class ShareData extends AppCompatActivity {
             }
         } else if (value == 2) {
             // Import was called
-            copyDataButton.setVisibility(View.INVISIBLE);
+            copyDataButton.setVisibility(View.GONE);
             pasteDataButton.setVisibility(View.VISIBLE);
             saveDataButton.setVisibility(View.VISIBLE);
             closeButton.setVisibility(View.VISIBLE);

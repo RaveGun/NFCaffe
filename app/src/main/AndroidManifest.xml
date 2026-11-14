@@ -27,7 +27,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -42,23 +41,19 @@
             android:name=".ManageIDs"
             android:label="@string/title_activity_manage_ids"
             android:parentActivityName=".MainActivity"
-            android:screenOrientation="portrait"
             android:theme="@style/AppTheme" />
 
         <activity
             android:name=".NFCReadCard"
-            android:parentActivityName=".ManageIDs"
-            android:screenOrientation="portrait" />
+            android:parentActivityName=".ManageIDs" />
 
         <activity
             android:name=".EditID"
-            android:parentActivityName=".ManageIDs"
-            android:screenOrientation="portrait" />
+            android:parentActivityName=".ManageIDs" />
 
         <activity
             android:name=".ShareData"
-            android:parentActivityName=".MainActivity"
-            android:screenOrientation="portrait" />
+            android:parentActivityName=".MainActivity" />
     </application>
 
 </manifest>

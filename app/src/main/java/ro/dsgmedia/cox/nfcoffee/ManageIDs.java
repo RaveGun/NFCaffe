@@ -19,8 +19,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.github.clans.fab.FloatingActionButton;
-import com.github.clans.fab.FloatingActionMenu;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +36,6 @@ public class ManageIDs extends AppCompatActivity {
     private MenuItem mDeleteID;
     private LinkedHashMap<String, String> nameNFCID = new LinkedHashMap<>();
     private int toDeleteItemPosition;
-    FloatingActionMenu fabMAIN;
 
     private SQLiteOpenHelper dbHelper;
     private SQLiteDatabase mydatabase;
@@ -51,62 +50,73 @@ public class ManageIDs extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fabDELC = (FloatingActionButton) findViewById(R.id.NFCClearCounters);
-        FloatingActionButton fabRNID = (FloatingActionButton) findViewById(R.id.NFCReadNewID);
-        FloatingActionButton fabEXID = (FloatingActionButton) findViewById(R.id.NFCExportIDs);
-        FloatingActionButton fabIMID = (FloatingActionButton) findViewById(R.id.NFCImportIDs);
-        fabMAIN = (FloatingActionMenu) findViewById(R.id.openOptionsIDs);
-
-        fabDELC.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton fabMenu = (FloatingActionButton) findViewById(R.id.openOptionsIDs);
+        fabMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Delete counters
-                if (true == clearAllCounters()) {
-                    updateListView();
-                    Toast.makeText(ManageIDs.this, "All counters were cleared!", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(ManageIDs.this, "UNKNOWN ERROR!!!", Toast.LENGTH_SHORT).show();
-                }
-                fabMAIN.close(true);
+                showOptions();
             }
         });
 
-        fabEXID.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Start the edit window to be able to copy and or paste data into the app from the files.
-                Intent shareDate = new Intent(ManageIDs.this, ShareData.class);
-                Bundle action = new Bundle();
-                action.putInt("action", 1);
-                shareDate.putExtras(action);
-                startActivity(shareDate);
-                // Close the menu
-                fabMAIN.close(true);
-            }
-        });
-
-        fabIMID.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Import is done from the text box, so no storage permission is involved.
-                Intent shareDate = new Intent(ManageIDs.this, ShareData.class);
-                Bundle action = new Bundle();
-                action.putInt("action", 2);
-                shareDate.putExtras(action);
-                startActivity(shareDate);
-                // Close the menu
-                fabMAIN.close(true);
-            }
-        });
-
-        fabRNID.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent ReadNFCIntent = new Intent(ManageIDs.this, NFCReadCard.class);
-                startActivity(ReadNFCIntent);
-            }
-        });
         mList = (ListView) findViewById(R.id.listOfIDs);
+    }
+
+    /**
+     * The four actions used to live in a com.github.clans FloatingActionMenu.
+     * They are now a Material 3 bottom sheet, with the same behaviour.
+     */
+    private void showOptions() {
+        final BottomSheetDialog sheet = new BottomSheetDialog(this);
+        View content = getLayoutInflater().inflate(R.layout.sheet_manage_ids, null);
+        sheet.setContentView(content);
+
+        content.findViewById(R.id.sheetDeleteCounters).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sheet.dismiss();
+                onDeleteCounters();
+            }
+        });
+        content.findViewById(R.id.sheetExportIds).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sheet.dismiss();
+                openShareData(1);
+            }
+        });
+        content.findViewById(R.id.sheetImportIds).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sheet.dismiss();
+                openShareData(2);
+            }
+        });
+        content.findViewById(R.id.sheetScanId).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sheet.dismiss();
+                startActivity(new Intent(ManageIDs.this, NFCReadCard.class));
+            }
+        });
+
+        sheet.show();
+    }
+
+    private void onDeleteCounters() {
+        if (true == clearAllCounters()) {
+            updateListView();
+            Toast.makeText(ManageIDs.this, "All counters were cleared!", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(ManageIDs.this, "UNKNOWN ERROR!!!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void openShareData(int action) {
+        Intent shareDate = new Intent(ManageIDs.this, ShareData.class);
+        Bundle bundle = new Bundle();
+        bundle.putInt("action", action);
+        shareDate.putExtras(bundle);
+        startActivity(shareDate);
     }
 
 
@@ -118,8 +128,6 @@ public class ManageIDs extends AppCompatActivity {
         mydatabase = dbHelper.getWritableDatabase();
 
         updateListView();
-
-        fabMAIN.close(true);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

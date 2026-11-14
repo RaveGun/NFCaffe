@@ -25,5 +25,13 @@
     <string name="get_the_data_over_the_tcp_connection">Get the Data over the TCP connection.</string>
     <string name="paste">Paste</string>
     <string name="close">Close</string>
+    <string name="copy">Copy</string>
+    <string name="delete_counters">Delete counters</string>
+    <string name="export_ids">Export IDs</string>
+    <string name="import_ids">Import IDs</string>
+    <string name="scan_id">Scan ID</string>
+    <string name="manage_options">Manage IDs</string>
+    <string name="csv_data">CSV data</string>
+    <string name="manage_options_button">Open actions</string>
 
 </resources>
