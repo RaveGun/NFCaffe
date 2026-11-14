@@ -108,21 +108,29 @@ These cannot be exercised on an emulator:
    file is readable as CSV.
 4. Check the app in the launcher still looks right (icon unchanged).
 
-## Still to do (not in this pass)
+## Still to do
 
-- **Phase 4 remainder (visual):** Material 3 + dark theme, adaptive icon,
-  replacing `com.github.clans:fab`, removing the hardcoded 409dp × 640dp
-  import box, hardcoded strings/colours, RTL paddings, and lifting the
-  portrait lock (needs responsive layouts first, especially `activity_share`).
-  Deliberately deferred because it needs visual review on a phone.
-- **Phase 5:** ViewModel + Room + proper socket timeout + Kotlin.
-- **Phase 6:** tests, Play Console Data safety update (permission set changed),
+- **Phase 5:** ViewModel + Room + proper socket timeout + Kotlin. The status log
+  is still lost if the activity is recreated mid-transfer (the button is
+  correctly kept disabled, but the text needs a ViewModel).
+- **Unit tests** for the card-code conversion (`ByteToBase36` / `RevertBase36`);
+  they are pure functions and are where a silent data corruption would start.
+- **targetSdk 37 cycle:** on API 36 the platform implicitly grants
+  `ACCESS_LOCAL_NETWORK` (shown as "Nearby devices" in App info). That implicit
+  grant disappears when targeting 37, so the manifest entry and a runtime
+  request will be needed or the TCP transfer to the reader will fail.
+  Verified on a Pixel 9a: the permission is not in the source manifest, not in
+  the merged manifest, and no dependency declares it.
+- **Phase 6:** Play Console Data safety update (permission set changed),
   rollout.
 
 ## Play Console checklist for the next upload
 
 1. Upload `app/build/outputs/bundle/release/app-release.aab` (versionCode 7).
 2. Update the **Data safety** form: location and "files and media" access are
-   no longer requested; the app only accesses the network and NFC.
-3. Confirm the upload key (`key0`, SHA-256 `A7:BF:D9:86:…:30:E8`) matches
-   App integrity → App signing → Upload key certificate.
+   no longer requested; the app accesses the network, NFC and the local
+   network.
+3. Confirm the upload key certificate under **Protected with Play → Play Store
+   protection → Manage Play app signing**. The 2017 key `A7:BF:D9:86:…:30:E8`
+   is valid until 2026-11-16 14:11; after that the new key
+   `86:C7:66:52:…:6B:6B:43` must be used (see docs/SIGNING.md).
