@@ -46,6 +46,8 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
   creating a new upload key, Play App Signing.
 - [docs/UPGRADE-5.2.md](docs/UPGRADE-5.2.md) — what changed in the 2026
   platform upgrade, what was tested where, and what is still to do.
+- [docs/MAINTENANCE.md](docs/MAINTENANCE.md) — the yearly checklist: when Play
+  raises the target SDK, how to cut a release, what to do when something breaks.
 
 ## Project layout
 
