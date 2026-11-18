@@ -42,6 +42,8 @@ android {
 
     buildTypes {
         debug {
+            // Makes it obvious in Settings > Apps which build is installed.
+            versionNameSuffix = '-debug'
         }
         release {
             minifyEnabled = true
@@ -89,10 +91,8 @@ dependencies {
     implementation libs.androidx.constraintlayout
     implementation libs.androidx.drawerlayout
     implementation libs.androidx.documentfile
+    implementation libs.androidx.recyclerview
     implementation libs.google.material
-
-    // TODO(phase 4): replace with Material FABs and drop this unmaintained library.
-    implementation libs.clans.fab
 
     testImplementation libs.junit
     androidTestImplementation libs.androidx.test.ext.junit

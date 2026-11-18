@@ -1,6 +1,7 @@
 package ro.dsgmedia.cox.nfcoffee;
 
 import android.app.Activity;
+import android.content.res.Configuration;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -23,8 +24,11 @@ final class WindowInsetsUtil {
     static void applySystemBarInsets(@NonNull Activity activity, @NonNull View root) {
         WindowInsetsControllerCompat controller =
                 WindowCompat.getInsetsController(activity.getWindow(), root);
-        controller.setAppearanceLightStatusBars(true);
-        controller.setAppearanceLightNavigationBars(true);
+        // Dark theme needs light icons; the theme decides, not a hardcoded value.
+        boolean nightMode = (activity.getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        controller.setAppearanceLightStatusBars(!nightMode);
+        controller.setAppearanceLightNavigationBars(!nightMode);
 
         final int initialLeft = root.getPaddingLeft();
         final int initialTop = root.getPaddingTop();

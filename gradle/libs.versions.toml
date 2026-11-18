@@ -8,7 +8,7 @@ material = "1.14.0"
 constraintlayout = "2.2.2"
 drawerlayout = "1.2.0"
 documentfile = "1.1.0"
-clansFab = "1.6.4"
+recyclerview = "1.4.0"
 
 junit = "4.13.2"
 androidxTestExtJunit = "1.3.0"
@@ -21,9 +21,8 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "a
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 androidx-drawerlayout = { module = "androidx.drawerlayout:drawerlayout", version.ref = "drawerlayout" }
 androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 google-material = { module = "com.google.android.material:material", version.ref = "material" }
-# TODO(phase 4): replace with Material FABs and drop this unmaintained library.
-clans-fab = { module = "com.github.clans:fab", version.ref = "clansFab" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestExtJunit" }

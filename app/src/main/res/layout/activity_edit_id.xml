@@ -1,108 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="16dp"
-    android:orientation="vertical"
+    android:fillViewport="true"
     tools:context="ro.dsgmedia.cox.nfcoffee.EditID">
 
-    <TextView
-        android:id="@+id/editID_tvCardID"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:labelFor="@+id/editID_etCardID"
-        android:text="@string/card_id" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <EditText
-        android:id="@+id/editID_etCardID"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:enabled="false"
-        android:inputType="textPersonName"
-        android:maxLines="1" />
+        <TextView
+            android:id="@+id/editID_tvCardID"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:labelFor="@+id/editID_etCardID"
+            android:text="@string/card_id"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-    <TextView
-        android:id="@+id/editID_tvCodeName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:labelFor="@+id/editID_etCodeName"
-        android:text="@string/code_name" />
+        <EditText
+            android:id="@+id/editID_etCardID"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:enabled="false"
+            android:inputType="textPersonName"
+            android:maxLines="1" />
 
-    <EditText
-        android:id="@+id/editID_etCodeName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:enabled="false"
-        android:inputType="textPersonName"
-        android:maxLines="1" />
+        <TextView
+            android:id="@+id/editID_tvCodeName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:labelFor="@+id/editID_etCodeName"
+            android:text="@string/code_name"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-    <TextView
-        android:id="@+id/editID_tvName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:labelFor="@+id/editID_etName"
-        android:text="@string/name" />
+        <EditText
+            android:id="@+id/editID_etCodeName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:enabled="false"
+            android:inputType="textPersonName"
+            android:maxLines="1" />
 
-    <EditText
-        android:id="@+id/editID_etName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:digits="ÄÖÜẞQWERTZUIOPASDFGHJKLYXCVBNM äöüßqwertzuiopasdfghjklyxcvbnm"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:maxLines="1"
-        android:selectAllOnFocus="true" />
+        <TextView
+            android:id="@+id/editID_tvName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:labelFor="@+id/editID_etName"
+            android:text="@string/name"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-    <TextView
-        android:id="@+id/editID_tvEmail"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:labelFor="@+id/editID_etEmail"
-        android:text="@string/email" />
+        <EditText
+            android:id="@+id/editID_etName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:digits="ÄÖÜẞQWERTZUIOPASDFGHJKLYXCVBNM äöüßqwertzuiopasdfghjklyxcvbnm"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:maxLines="1"
+            android:selectAllOnFocus="true" />
 
-    <EditText
-        android:id="@+id/editID_etEmail"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:digits="QWERTZUIOPASDFGHJKLYXCVBNM qwertzuiopasdfghjklyxcvbnm1234567890_@."
-        android:ems="10"
-        android:inputType="textEmailAddress"
-        android:maxLines="1"
-        android:selectAllOnFocus="true" />
+        <TextView
+            android:id="@+id/editID_tvEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:labelFor="@+id/editID_etEmail"
+            android:text="@string/email"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-    <TextView
-        android:id="@+id/editID_tvCoffees"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:labelFor="@+id/editID_etCoffees"
-        android:text="@string/number_of_coffees" />
+        <EditText
+            android:id="@+id/editID_etEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:digits="QWERTZUIOPASDFGHJKLYXCVBNM qwertzuiopasdfghjklyxcvbnm1234567890_@."
+            android:ems="10"
+            android:inputType="textEmailAddress"
+            android:maxLines="1"
+            android:selectAllOnFocus="true" />
 
-    <EditText
-        android:id="@+id/editID_etCoffees"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:enabled="false"
-        android:inputType="textPersonName"
-        android:maxLines="1" />
+        <TextView
+            android:id="@+id/editID_tvCoffees"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:labelFor="@+id/editID_etCoffees"
+            android:text="@string/number_of_coffees"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        <EditText
+            android:id="@+id/editID_etCoffees"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:enabled="false"
+            android:inputType="textPersonName"
+            android:maxLines="1" />
 
-    <Button
-        android:id="@+id/editID_bSave"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/save" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editID_bSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/save" />
 
-    <Button
-        android:id="@+id/editID_bCancel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/cancel" />
-</LinearLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editID_bCancel"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/cancel" />
+
+    </LinearLayout>
+
+</ScrollView>

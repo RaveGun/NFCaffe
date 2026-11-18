@@ -17,9 +17,10 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
@@ -27,7 +28,7 @@ import java.util.Calendar;
 import java.util.Locale;
 
 
-public class ShareData extends AppCompatActivity {
+public class ShareData extends BaseActivity {
 
     private static final String CSV_HEADER = "NFCID,CODENAME,UNAME,EMAIL,COFF";
 
@@ -51,6 +52,15 @@ public class ShareData extends AppCompatActivity {
                         }
                     });
 
+    /** Loads an already saved CSV into the text box so it can be reviewed first. */
+    private final ActivityResultLauncher<String[]> openCsvDocument =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(),
+                    uri -> {
+                        if (uri != null) {
+                            readCsv(uri);
+                        }
+                    });
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share);
@@ -62,6 +72,7 @@ public class ShareData extends AppCompatActivity {
         exportedData = findViewById(R.id.exportData);
         Button copyDataButton = (Button) findViewById(R.id.copyData);
         Button pasteDataButton = (Button) findViewById(R.id.pasteData);
+        Button openFileButton = (Button) findViewById(R.id.openFile);
         Button saveDataButton = (Button) findViewById(R.id.saveData);
         Button closeButton = (Button) findViewById(R.id.closeNoSave);
 
@@ -73,8 +84,9 @@ public class ShareData extends AppCompatActivity {
         if (value == 1) {
             // Export action was called
             copyDataButton.setVisibility(View.VISIBLE);
-            pasteDataButton.setVisibility(View.INVISIBLE);
-            saveDataButton.setVisibility(View.INVISIBLE);
+            pasteDataButton.setVisibility(View.GONE);
+            openFileButton.setVisibility(View.GONE);
+            saveDataButton.setVisibility(View.GONE);
             closeButton.setVisibility(View.VISIBLE);
             csvToSave = buildCsv();
             exportedData.setText(csvToSave);
@@ -83,8 +95,9 @@ public class ShareData extends AppCompatActivity {
             }
         } else if (value == 2) {
             // Import was called
-            copyDataButton.setVisibility(View.INVISIBLE);
+            copyDataButton.setVisibility(View.GONE);
             pasteDataButton.setVisibility(View.VISIBLE);
+            openFileButton.setVisibility(View.VISIBLE);
             saveDataButton.setVisibility(View.VISIBLE);
             closeButton.setVisibility(View.VISIBLE);
         }
@@ -125,6 +138,16 @@ public class ShareData extends AppCompatActivity {
         finish();
     }
 
+    /** Opens the document picker to load a CSV that was saved earlier. */
+    public void btnOpenFilePressed(View v) {
+        openCsvDocument.launch(new String[]{
+                "text/*",
+                "application/csv",
+                "application/vnd.ms-excel",
+                "application/octet-stream"
+        });
+    }
+
     public void btnClosePressed(View v) {
         finish();
     }
@@ -148,10 +171,12 @@ public class ShareData extends AppCompatActivity {
         Cursor rawQuerry = mydatabase.rawQuery("SELECT * FROM " + SqlHelper_NFCIDs.TABLE_NAME + " ORDER BY " + SqlHelper_NFCIDs.USER_NAME + " ASC;", null);
         rawQuerry.moveToFirst();
         for (int i = 0; i < rawQuerry.getCount(); i++) {
-            String NFCIDString = rawQuerry.getString(0);
-            String CodeNameString = rawQuerry.getString(1);
-            String UserName = rawQuerry.getString(2);
-            String Email = rawQuerry.getString(3);
+            String NFCIDString = orEmpty(rawQuerry.getString(0));
+            String CodeNameString = orEmpty(rawQuerry.getString(1));
+            // UNAME/EMAIL are NULL for cards that came straight from the reader,
+            // and StringBuilder.append(null) would write the literal "null".
+            String UserName = orEmpty(rawQuerry.getString(2));
+            String Email = orEmpty(rawQuerry.getString(3));
             String Coffees = String.valueOf(rawQuerry.getInt(4));
             csv.append(NFCIDString).append(',')
                     .append(CodeNameString).append(',')
@@ -164,8 +189,11 @@ public class ShareData extends AppCompatActivity {
         return csv.toString();
     }
 
-    private void writeCsv(Uri uri) {
-        try (OutputStream os = getContentResolver().openOutputStream(uri, "wt")) {
+    private static String orEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
+    private void writeCsv(Uri uri) {        try (OutputStream os = getContentResolver().openOutputStream(uri, "wt")) {
             if (os == null) {
                 throw new IOException("The document provider returned no stream");
             }
@@ -176,6 +204,32 @@ public class ShareData extends AppCompatActivity {
         } catch (IOException e) {
             Log.w("STORAGE", "Error writing the export", e);
             Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** Reads the picked document into the text box so it can be reviewed first. */
+    private void readCsv(Uri uri) {
+        try (InputStream is = getContentResolver().openInputStream(uri)) {
+            if (is == null) {
+                throw new IOException("The document provider returned no stream");
+            }
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] chunk = new byte[8192];
+            int read;
+            while ((read = is.read(chunk)) != -1) {
+                buffer.write(chunk, 0, read);
+            }
+            String text = new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+            // Spreadsheet programs like to prefix a UTF-8 BOM, which would break
+            // the header comparison below.
+            if (text.startsWith("\uFEFF")) {
+                text = text.substring(1);
+            }
+            exportedData.setText(text);
+            Toast.makeText(this, "File loaded. Press Import to apply.", Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Log.w("STORAGE", "Error reading the import file", e);
+            Toast.makeText(this, "Could not read the file: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 

@@ -24,18 +24,18 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.google.android.material.color.DynamicColors;
 import com.google.android.material.navigation.NavigationView;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private DrawerLayout mDrawerLayout;
     private TextView mCurrentStatus;
@@ -45,6 +45,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
 
     private SQLiteDatabase mydatabase;
+
+    /**
+     * A transfer keeps running on its executor even if the activity is
+     * recreated (rotation is allowed now). The flag keeps the button disabled
+     * for the new instance so a second transfer cannot add the counters twice.
+     */
+    private static volatile boolean sTransferRunning = false;
 
     Context context = this;
 
@@ -70,6 +77,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView mOptionsView = (NavigationView) findViewById(R.id.navigation_drawer);
         mOptionsView.setNavigationItemSelectedListener(this);
 
+        MenuItem dynamicColour = mOptionsView.getMenu().findItem(R.id.navigation_item_dynamic_colour);
+        if (dynamicColour != null) {
+            // Only meaningful on Android 12+ where Material You exists.
+            dynamicColour.setVisible(DynamicColors.isDynamicColorAvailable());
+            dynamicColour.setChecked(Prefs.useDynamicColour(this));
+        }
+
         //calling sync state is necessary or else your hamburger icon wont show up
         mActionBarDrawerToggle.syncState();
 
@@ -80,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Setup listeners for the two buttons
         buttonGetTCP = (ImageButton) findViewById(R.id.getTcpData);
+        buttonGetTCP.setEnabled(!sTransferRunning);
         buttonGetTCP.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -90,11 +105,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     // Prevent a second transfer from being started while this one runs,
                     // otherwise the counters would be added twice.
                     buttonGetTCP.setEnabled(false);
+                    sTransferRunning = true;
                     mCurrentStatus.setText("");
 
                     /* use the hand written TaskRunner class to start the ConnectTask callable class */
                     TaskRunner taskRunner = new TaskRunner();
                     taskRunner.executeAsync(new ConnectTask(), (data) -> {
+                        sTransferRunning = false;
                         buttonGetTCP.setPressed(false);
                         buttonGetTCP.setEnabled(true);
                     });
@@ -129,12 +146,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int i = item.getItemId();
 
         if (i == R.id.navigation_item_help) {
-            // there is no help implemented
-            Toast.makeText(getApplicationContext(), "Help is not available now.", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(this, HelpActivity.class));
         } else if (i == R.id.navigation_item_manIDs) {
             // open manage IDs activity
             Intent ManageIDsIntent = new Intent(this, ManageIDs.class);
             startActivity(ManageIDsIntent);
+        } else if (i == R.id.navigation_item_dynamic_colour) {
+            boolean enabled = !Prefs.useDynamicColour(this);
+            Prefs.setUseDynamicColour(this, enabled);
+            item.setChecked(enabled);
+            // Re-create so the overlay is applied (or not) before inflation.
+            recreate();
         }
         //close navigation drawer
         mDrawerLayout.closeDrawer(GravityCompat.START);

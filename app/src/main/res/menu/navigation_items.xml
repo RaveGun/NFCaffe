@@ -16,4 +16,13 @@
             android:title="@string/help"
             android:visible="true" />
     </group>
+
+    <!-- Material You toggle; hidden on devices without dynamic colour support -->
+    <group android:checkableBehavior="all">
+        <item
+            android:id="@+id/navigation_item_dynamic_colour"
+            android:checkable="true"
+            android:checked="true"
+            android:title="@string/dynamic_colour" />
+    </group>
 </menu>
