@@ -2,24 +2,26 @@
 
 ## Keys in play
 
-| | **Upload key in use** (until the reset is approved) | **New upload key** (generated 2026-11-14) |
+| | **Previous upload key** (archived 2026-11-16) | **Upload key in use** (since 2026-11-16) |
 |---|---|---|
 | Keystore | `~/AndroidKeysStore/nfcoffee_key.jks` | `~/AndroidKeysStore/nfcoffee-upload.p12` |
 | Format | JKS (legacy) | PKCS12 |
 | Alias | `key0` | `key0` |
 | Certificate SHA-256 | `A7:BF:D9:86:0F:DD:C2:6E:6E:96:FE:EF:F5:C3:F2:16:08:97:D4:CE:83:23:E8:2F:2B:79:11:C0:D4:37:30:E8` | `86:C7:66:52:16:22:78:B1:C9:91:13:3E:90:1B:A7:99:05:D3:79:AB:BE:B3:51:71:2D:3E:EB:B5:9E:6B:6B:43` |
+| Certificate SHA-1 | `05:09:68:9F:CE:12:59:A7:D1:5A:E3:3C:36:78:D2:6F:E0:36:84:4D` | `19:D9:5E:CC:95:95:3D:2A:B4:7B:FB:7F:49:44:9A:00:97:F8:08:58` |
 | Owner / validity | `O=DSGMedia.ro`, 2017-07-17 → 2116-06-23 | `CN=NFCoffee Upload, O=DSGMedia.ro, C=RO`, 2026-11-14 → 2054-04-01 |
 | Key | RSA 2048 | RSA 4096 |
 
-**Reset status:** requested 2026-11-14 and approved. Google activates the new
-certificate on **2026-11-16 at 14:11** (as displayed by Play Console).
+**Reset status:** requested 2026-11-14, activated 2026-11-16 14:11, **verified
+2026-11-18**: Play Console's *Upload key* shows SHA-1
+`19:D9:5E:CC:…:08:58`, and a release AAB signed with the new key reports the
+same SHA-1 and SHA-256. The old key is no longer accepted for uploads.
 
-Until that moment every upload is still validated against the **old**
-certificate, so `keystore.properties` must keep pointing at
-`nfcoffee_key.jks`. Avoid uploading anything in the transition window if you
-can; after the activation timestamp, sign with the new key only.
+`keystore.properties` now points at `nfcoffee-upload.p12`. One password only:
+PKCS12 uses the same value for store and key, and `keytool` will not create
+different ones.
 
-### Switching to the new key (on/after 2026-11-16 14:11)
+### Switching (done 2026-11-18)
 
 ```properties
 storeFile=/home/cox/AndroidKeysStore/nfcoffee-upload.p12
