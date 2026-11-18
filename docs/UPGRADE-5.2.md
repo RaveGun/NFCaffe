@@ -124,6 +124,44 @@ These cannot be exercised on an emulator:
 - **Phase 6:** Play Console Data safety update (permission set changed),
   rollout.
 
+## Play pre-review warnings (deferred to the next cycle)
+
+Play reported two "recommended actions" for the 5.2 bundle on 2026-11-18.
+Neither blocks review or rollout; both are deferred.
+
+### "Edge-to-edge may not display for all users"
+
+`EdgeToEdge.enable()` is called in `MainActivity` only; the other four
+activities rely on the platform forcing edge-to-edge (targetSdk 36) plus the
+padding that `WindowInsetsUtil` applies. That works — verified on Android 17 —
+but the detector looks for the call per activity.
+
+**Fix:** move `EdgeToEdge.enable(this)` into `BaseActivity.onCreate`, next to
+the `DynamicColors` call, so every activity invokes it explicitly. No behaviour
+change: insets are already handled in all five activities.
+
+### "Deprecated APIs for edge-to-edge"
+
+Play lists `Window.setStatusBarColor`, `Window.setNavigationBarColor` and
+`LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES`, reported at `qd.a`, `sd.a` and
+`pd.b`. Those are R8-renamed classes;
+`app/build/outputs/mapping/release/mapping.txt` resolves them:
+
+    androidx.activity.EdgeToEdgeApi28 -> pd:  adjustLayoutInDisplayCutoutMode(Window) -> b
+    androidx.activity.EdgeToEdgeApi29 -> qd:  setUp(SystemBarStyle, …) -> a
+    androidx.activity.EdgeToEdgeApi35 -> sd:  setUp(SystemBarStyle, …) -> a
+
+So the deprecated calls come from AndroidX's own `EdgeToEdge` backport, not
+from this codebase. They are how the system bars are made transparent on
+Android 10–14. Nothing to change locally: the warning clears when AndroidX
+stops using those APIs. Dropping `EdgeToEdge.enable()` would only move the same
+calls into our own classes.
+
+### When to do it
+
+Together with the `targetSdk 37` bump (see the bullet above), which also
+requires declaring `ACCESS_LOCAL_NETWORK`. One cycle, two fixes.
+
 ## Play Console checklist for the next upload
 
 1. Upload `app/build/outputs/bundle/release/app-release.aab` (versionCode 7).
